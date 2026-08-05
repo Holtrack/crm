@@ -55,12 +55,12 @@ function CompaniesPage() {
             <SelectItem value="customer">Customer</SelectItem>
           </SelectContent>
         </Select>
-        <Select defaultValue="walid">
+        <Select defaultValue="charissa">
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Owner" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="walid">Owner: Walid</SelectItem>
+            <SelectItem value="charissa">Owner: Charissa</SelectItem>
             <SelectItem value="andi">Owner: Andi</SelectItem>
             <SelectItem value="rina">Owner: Rina</SelectItem>
             <SelectItem value="dimas">Owner: Dimas</SelectItem>

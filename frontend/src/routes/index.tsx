@@ -67,7 +67,7 @@ const RECENT_ACTIVITY = [
     iconClassName: 'bg-blue-100 text-blue-600',
     text: (
       <>
-        <span className="font-medium">Walid</span> added a new contact{' '}
+        <span className="font-medium">Charissa</span> added a new contact{' '}
         <span className="font-medium text-blue-600">Budi Santoso</span>
       </>
     ),
@@ -89,7 +89,7 @@ const RECENT_ACTIVITY = [
     iconClassName: 'bg-emerald-100 text-emerald-600',
     text: (
       <>
-        <span className="font-medium">Walid</span> created deal{' '}
+        <span className="font-medium">Charissa</span> created deal{' '}
         <span className="font-medium text-blue-600">PT Maju Bersama</span>
       </>
     ),
@@ -105,7 +105,7 @@ function DashboardPage() {
           Dashboard Overview
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Welcome back, Walid. Here is your team's performance today.
+          Welcome back, Charissa. Here is your team's performance today.
         </p>
       </div>
 

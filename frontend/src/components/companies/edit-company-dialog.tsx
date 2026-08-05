@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select'
 import { updateCompany, type Company } from '@/data/companies'
 
-export const TEAM_OWNERS = ['Walid', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
+export const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
 export const SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Event', 'Other'] as const
 
 const formSchema = z.object({
