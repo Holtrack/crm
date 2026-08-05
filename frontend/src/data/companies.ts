@@ -9,10 +9,22 @@ export type CompanySource =
   | 'Event'
   | 'Other'
 
+export interface DealActivityLogEntry {
+  label: string
+  date: string
+  done: boolean
+}
+
 export interface Deal {
+  id: string
+  companyId: string
   name: string
   amount: string
   status: DealStatus
+  probability: number
+  contactId?: string
+  activityLog: DealActivityLogEntry[]
+  information: string
 }
 
 export interface CompanyContact {
@@ -79,8 +91,37 @@ export const COMPANIES: Company[] = [
       },
     ],
     deals: [
-      { name: 'ERP Implementation', amount: 'Rp500.000.000', status: 'Negotiation' },
-      { name: 'CRM Integration Service', amount: 'Rp150.000.000', status: 'Won' },
+      {
+        id: 'erp-implementation',
+        companyId: 'pt-maju-bersama',
+        name: 'ERP Implementation',
+        amount: 'Rp500.000.000',
+        status: 'Negotiation',
+        probability: 75,
+        contactId: 'budi-santoso',
+        activityLog: [
+          { label: 'Lead Created', date: 'Sep 24, 2023', done: true },
+          { label: 'Introductory Call Completed', date: 'Oct 02, 2023', done: true },
+          { label: 'Custom Technical Demo Done', date: 'Oct 08, 2023', done: true },
+          { label: 'Proposal Submitted & Received', date: 'Oct 15, 2023', done: true },
+        ],
+        information:
+          'Kita sempet kasih pricing Rp600jt tapi mereka ga setuju.',
+      },
+      {
+        id: 'crm-integration-service',
+        companyId: 'pt-maju-bersama',
+        name: 'CRM Integration Service',
+        amount: 'Rp150.000.000',
+        status: 'Won',
+        probability: 100,
+        contactId: 'andi-wijaya',
+        activityLog: [
+          { label: 'Lead Created', date: 'Aug 12, 2023', done: true },
+          { label: 'Contract Signed', date: 'Sep 05, 2023', done: true },
+        ],
+        information: 'Closed as part of the ERP bundle renewal.',
+      },
     ],
     contacts: [
       {
@@ -136,7 +177,21 @@ export const COMPANIES: Company[] = [
       },
     ],
     deals: [
-      { name: 'Inventory Management Suite', amount: 'Rp220.000.000', status: 'Proposal' },
+      {
+        id: 'inventory-management-suite',
+        companyId: 'pt-sejahtera',
+        name: 'Inventory Management Suite',
+        amount: 'Rp220.000.000',
+        status: 'Proposal',
+        probability: 40,
+        contactId: 'sarah-wijaya',
+        activityLog: [
+          { label: 'Lead Created', date: 'Oct 28, 2023', done: true },
+          { label: 'Discovery Call Completed', date: 'Nov 02, 2023', done: true },
+          { label: 'Proposal Sent', date: 'Nov 09, 2023', done: false },
+        ],
+        information: 'Waiting on requirements sign-off before pricing talks.',
+      },
     ],
     contacts: [
       {
@@ -186,7 +241,21 @@ export const COMPANIES: Company[] = [
       },
     ],
     deals: [
-      { name: 'Annual License Renewal', amount: 'Rp180.000.000', status: 'Won' },
+      {
+        id: 'annual-license-renewal',
+        companyId: 'pt-nusantara',
+        name: 'Annual License Renewal',
+        amount: 'Rp180.000.000',
+        status: 'Won',
+        probability: 100,
+        contactId: 'ahmad-fauzi',
+        activityLog: [
+          { label: 'Renewal Discussion', date: 'Sep 20, 2023', done: true },
+          { label: 'Renewal Contract Sent', date: 'Sep 28, 2023', done: true },
+          { label: 'Renewal Terms Signed', date: 'Oct 02, 2023', done: true },
+        ],
+        information: 'Renewed at the same rate with a 12-month term.',
+      },
     ],
     contacts: [
       {
@@ -247,5 +316,116 @@ export function addCompany(input: NewCompanyInput): Company {
   }
 
   COMPANIES.push(company)
+  return company
+}
+
+export function getDealById(dealId: string) {
+  for (const company of COMPANIES) {
+    const deal = company.deals.find((deal) => deal.id === dealId)
+    if (deal) return deal
+  }
+  return undefined
+}
+
+export function updateDealInformation(dealId: string, information: string): Deal {
+  const deal = getDealById(dealId)
+  if (!deal) {
+    throw new Error(`Deal not found: ${dealId}`)
+  }
+
+  deal.information = information
+  return deal
+}
+
+export interface EditDealInput {
+  name: string
+  amount: string
+  status: DealStatus
+  probability: number
+  contactId?: string
+}
+
+export function updateDeal(dealId: string, input: EditDealInput): Deal {
+  const deal = getDealById(dealId)
+  if (!deal) {
+    throw new Error(`Deal not found: ${dealId}`)
+  }
+
+  deal.name = input.name
+  deal.amount = input.amount
+  deal.status = input.status
+  deal.probability = input.probability
+  deal.contactId = input.contactId
+
+  return deal
+}
+
+export interface EditCompanyCredentialsInput {
+  industry: string
+  website: string
+  phone: string
+  address: string
+  teamLeadOwner: string
+  source: CompanySource
+}
+
+export function updateCompanyCredentials(
+  id: string,
+  input: EditCompanyCredentialsInput,
+): Company {
+  const company = getCompanyById(id)
+  if (!company) {
+    throw new Error(`Company not found: ${id}`)
+  }
+
+  company.industry = input.industry
+  company.website = input.website
+  company.phone = input.phone
+  company.address = input.address
+  company.teamLeadOwner = input.teamLeadOwner
+  company.source = input.source
+
+  return company
+}
+
+export function updateDealStages(id: string, stages: DealStage[]): Company {
+  const company = getCompanyById(id)
+  if (!company) {
+    throw new Error(`Company not found: ${id}`)
+  }
+
+  company.dealStages = stages
+  return company
+}
+
+export interface EditCompanyInput {
+  name: string
+  industry: string
+  region: string
+  website: string
+  phone: string
+  address: string
+  teamLeadOwner: string
+  status: CompanyStatus
+  source: CompanySource
+}
+
+export function updateCompany(id: string, input: EditCompanyInput): Company {
+  const company = getCompanyById(id)
+  if (!company) {
+    throw new Error(`Company not found: ${id}`)
+  }
+
+  company.name = input.name
+  company.industry = input.industry
+  company.tagline = `${input.industry} Partner`
+  company.location = `${input.region}, ID`
+  company.website = input.website
+  company.phone = input.phone
+  company.address = input.address
+  company.teamLeadOwner = input.teamLeadOwner
+  company.status = input.status
+  company.source = input.source
+
   return company
 }

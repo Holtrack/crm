@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useRouter } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -30,59 +30,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { addCompany } from '@/data/companies'
-import { addFollowUpTask } from '@/data/tasks'
+import { addTask } from '@/data/tasks'
+import { COMPANIES } from '@/data/companies'
 
-const TEAM_OWNERS = ['Walid', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
-const SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Event', 'Other'] as const
+const STATUSES = ['Todo', 'In Progress', 'Completed'] as const
+const PRIORITIES = ['Low', 'Medium', 'High'] as const
 
 const formSchema = z.object({
-  name: z.string().trim().min(2, 'Company name is required'),
-  industry: z.string().trim().min(2, 'Industry is required'),
-  region: z.string().trim().min(2, 'Region / city is required'),
-  website: z.string().trim().optional(),
-  phone: z.string().trim().optional(),
-  address: z.string().trim().optional(),
-  teamLeadOwner: z.string().min(1, 'Select a team lead owner'),
-  status: z.enum(['Prospect', 'Active', 'Customer']),
-  source: z.enum(SOURCES),
+  title: z.string().trim().min(2, 'Title is required'),
+  tag: z.string().trim().min(1, 'Tag is required'),
+  status: z.enum(STATUSES),
+  priority: z.enum(PRIORITIES),
+  dueDate: z.string().min(1, 'Due date is required'),
+  companyId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-export function AddCompanyDialog() {
+export function AddTaskDialog() {
   const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      industry: '',
-      region: '',
-      website: '',
-      phone: '',
-      address: '',
-      teamLeadOwner: '',
-      status: 'Prospect',
-      source: 'Referral',
+      title: '',
+      tag: '',
+      status: 'Todo',
+      priority: 'Medium',
+      dueDate: '',
+      companyId: undefined,
     },
   })
 
   function onSubmit(values: FormValues) {
-    const company = addCompany({
-      ...values,
-      website: values.website ?? '',
-      phone: values.phone ?? '',
-      address: values.address ?? '',
-    })
-    addFollowUpTask(company)
+    addTask(values)
     setOpen(false)
     form.reset()
-    navigate({
-      to: '/companies/org/$companyId',
-      params: { companyId: company.id },
-    })
+    router.invalidate()
   }
 
   return (
@@ -96,14 +81,14 @@ export function AddCompanyDialog() {
       <DialogTrigger asChild>
         <Button className="bg-blue-600 hover:bg-blue-600/90">
           <Plus className="size-4" />
-          Add Company
+          New Task
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Company</DialogTitle>
+          <DialogTitle>New Task</DialogTitle>
           <DialogDescription>
-            Create a new company profile in your pipeline.
+            Add a task to track a follow-up or action item.
           </DialogDescription>
         </DialogHeader>
 
@@ -114,12 +99,12 @@ export function AddCompanyDialog() {
           >
             <FormField
               control={form.control}
-              name="name"
+              name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Company Name</FormLabel>
+                  <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="PT Contoh Sejahtera" {...field} />
+                    <Input placeholder="Follow Up PT ABC" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,12 +114,12 @@ export function AddCompanyDialog() {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="industry"
+                name="tag"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Industry</FormLabel>
+                    <FormLabel>Tag</FormLabel>
                     <FormControl>
-                      <Input placeholder="Manufacturing & Tech" {...field} />
+                      <Input placeholder="Lead" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,12 +127,12 @@ export function AddCompanyDialog() {
               />
               <FormField
                 control={form.control}
-                name="region"
+                name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Region / City</FormLabel>
+                    <FormLabel>Due Date</FormLabel>
                     <FormControl>
-                      <Input placeholder="Jakarta" {...field} />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,66 +143,20 @@ export function AddCompanyDialog() {
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="website"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Website</FormLabel>
-                    <FormControl>
-                      <Input placeholder="www.contoh.co.id" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="021xxxxxxx" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Street, building, city" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="teamLeadOwner"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Team Lead Owner</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select owner" />
+                          <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {TEAM_OWNERS.map((owner) => (
-                          <SelectItem key={owner} value={owner}>
-                            {owner}
+                        {STATUSES.map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -228,23 +167,22 @@ export function AddCompanyDialog() {
               />
               <FormField
                 control={form.control}
-                name="status"
+                name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Prospect">Prospect</SelectItem>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Customer">Customer</SelectItem>
+                        {PRIORITIES.map((priority) => (
+                          <SelectItem key={priority} value={priority}>
+                            {priority}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -255,20 +193,20 @@ export function AddCompanyDialog() {
 
             <FormField
               control={form.control}
-              name="source"
+              name="companyId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source / Lead Origin</FormLabel>
+                  <FormLabel>Related Company (optional)</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select source" />
+                        <SelectValue placeholder="Select company" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {SOURCES.map((source) => (
-                        <SelectItem key={source} value={source}>
-                          {source}
+                      {COMPANIES.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -287,7 +225,7 @@ export function AddCompanyDialog() {
                 Cancel
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Create Company
+                Create Task
               </Button>
             </DialogFooter>
           </form>
