@@ -33,7 +33,7 @@ import {
 import { addCompany } from '@/data/companies'
 import { addFollowUpTask } from '@/data/tasks'
 
-const TEAM_OWNERS = ['Walid', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
+const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
 const SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Event', 'Other'] as const
 
 const formSchema = z.object({
