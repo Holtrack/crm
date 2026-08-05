@@ -13,14 +13,15 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DealCard } from '@/components/pipeline/deal-card'
 import { PipelineColumn } from '@/components/pipeline/pipeline-column'
-import { INITIAL_DEALS, STAGES, type StageKey } from '@/data/pipeline'
+import { STAGES, getPipelineDeals, type StageKey } from '@/data/pipeline'
+import { updateDealStatus } from '@/data/companies'
 
 export const Route = createFileRoute('/pipeline')({
   component: PipelinePage,
 })
 
 function PipelinePage() {
-  const [deals, setDeals] = useState(INITIAL_DEALS)
+  const [deals, setDeals] = useState(getPipelineDeals)
   const [activeId, setActiveId] = useState<string | null>(null)
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -38,11 +39,8 @@ function PipelinePage() {
     if (!over) return
 
     const newStage = over.id as StageKey
-    setDeals((prev) =>
-      prev.map((deal) =>
-        deal.id === active.id ? { ...deal, stage: newStage } : deal,
-      ),
-    )
+    updateDealStatus(String(active.id), newStage)
+    setDeals(getPipelineDeals())
   }
 
   const activeDeal = deals.find((deal) => deal.id === activeId)
@@ -75,7 +73,7 @@ function PipelinePage() {
               key={stage.key}
               stageKey={stage.key}
               label={stage.label}
-              deals={deals.filter((deal) => deal.stage === stage.key)}
+              deals={deals.filter((deal) => deal.status === stage.key)}
             />
           ))}
         </div>

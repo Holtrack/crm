@@ -1,12 +1,12 @@
 import { useDroppable } from '@dnd-kit/core'
 import { DealCard } from '@/components/pipeline/deal-card'
-import type { Deal, StageKey } from '@/data/pipeline'
+import type { PipelineDeal, StageKey } from '@/data/pipeline'
 import { cn } from '@/lib/utils'
 
 interface PipelineColumnProps {
   stageKey: StageKey
   label: string
-  deals: Deal[]
+  deals: PipelineDeal[]
 }
 
 export function PipelineColumn({ stageKey, label, deals }: PipelineColumnProps) {

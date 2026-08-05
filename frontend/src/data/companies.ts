@@ -339,6 +339,16 @@ export function updateDealInformation(dealId: string, information: string): Deal
   return deal
 }
 
+export function updateDealStatus(dealId: string, status: DealStatus): Deal {
+  const deal = getDealById(dealId)
+  if (!deal) {
+    throw new Error(`Deal not found: ${dealId}`)
+  }
+
+  deal.status = status
+  return deal
+}
+
 export interface EditDealInput {
   name: string
   amount: string
