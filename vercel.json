@@ -5,7 +5,7 @@
     },
     "backend": {
       "root": "backend",
-      "entrypoint": "dist/main.js"
+      "entrypoint": "src/main.ts"
     }
   },
   "rewrites": [
