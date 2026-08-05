@@ -1,10 +1,10 @@
 export type ActivityType =
-  | 'Meeting'
+  | 'WhatsApp'
   | 'Call'
   | 'Email'
   | 'Demo'
   | 'Follow Up'
-  | 'Note'
+  | 'Meeting'
 
 export interface Activity {
   id: string
@@ -16,18 +16,7 @@ export interface Activity {
   summary: string
 }
 
-export const ACTIVITIES: Activity[] = [
-  {
-    id: 'act-followup-proposal-review',
-    companyId: 'pt-maju-bersama',
-    title: 'Follow-up and Proposal Review Meeting',
-    context: 'B2B Client Consultation • Indonesian Market',
-    type: 'Meeting',
-    datetime: '10 Aug 2026, 14:00 PM',
-    summary:
-      'Customer requested discount. Need revised proposal. Next follow up next week. Budi was highly interactive and is pushing for executive board clearance before September.',
-  },
-]
+export const ACTIVITIES: Activity[] = []
 
 export function getActivityById(id: string) {
   return ACTIVITIES.find((activity) => activity.id === id)

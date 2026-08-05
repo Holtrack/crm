@@ -1,11 +1,11 @@
-import { createFileRoute, notFound, Link } from '@tanstack/react-router'
+import { createFileRoute, notFound, Link, useRouter } from '@tanstack/react-router'
 import { Building2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AvatarInitial } from '@/components/dashboard/avatar-initial'
 import { DealStatusBadge } from '@/components/dashboard/deal-status-badge'
 import { CompanyStatusBadge } from '@/components/dashboard/company-status-badge'
 import { AddActivityDialog } from '@/components/companies/add-activity-dialog'
+import { AddContactDialog } from '@/components/contacts/add-contact-dialog'
 import { EditCompanyDialog } from '@/components/companies/edit-company-dialog'
 import { CompanyCredentials } from '@/components/companies/company-credentials'
 import { DealStageList } from '@/components/companies/deal-stage-list'
@@ -26,6 +26,7 @@ export const Route = createFileRoute('/companies/org/$companyId')({
 
 function CompanyDetailPage() {
   const { company, activities } = Route.useLoaderData()
+  const router = useRouter()
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,9 +49,10 @@ function CompanyDetailPage() {
         </div>
         <div className="flex gap-2">
           <EditCompanyDialog company={company} />
-          <Button className="bg-blue-600 hover:bg-blue-600/90">
-            + Add Contact
-          </Button>
+          <AddContactDialog
+            companyId={company.id}
+            onCreated={() => router.invalidate()}
+          />
           <AddActivityDialog companyId={company.id} />
         </div>
       </div>

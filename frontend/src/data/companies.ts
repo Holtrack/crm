@@ -53,222 +53,7 @@ export interface Company {
   contacts: CompanyContact[]
 }
 
-export const COMPANIES: Company[] = [
-  {
-    id: 'pt-maju-bersama',
-    name: 'PT Maju Bersama',
-    industry: 'Manufacturing & Tech',
-    tagline: 'Technology & Manufacturing Partner',
-    location: 'Jakarta, ID',
-    website: 'www.majubersama.co.id',
-    phone: '0215551234',
-    address: 'Graha Multi, Kuningan, Jakarta',
-    teamLeadOwner: 'Andi Wijaya',
-    status: 'Active',
-    source: 'Existing Client Referral',
-    dealStages: [
-      {
-        title: 'Call Completed',
-        description: 'Introductory phone call to understand server needs',
-        date: 'Oct 10, 2023',
-        done: true,
-      },
-      {
-        title: 'Product Demo Scheduled',
-        description: 'Walkthrough of Holtrack feature set',
-        date: 'Oct 14, 2023',
-        done: true,
-      },
-      {
-        title: 'Proposal Sent',
-        description: 'Custom Rp500 million solution draft',
-        date: 'Oct 18, 2023',
-        done: true,
-      },
-      {
-        title: 'Negotiation',
-        description: 'Discussions on annual licensing terms',
-        date: 'Pending',
-        done: false,
-      },
-    ],
-    deals: [
-      {
-        id: 'erp-implementation',
-        companyId: 'pt-maju-bersama',
-        name: 'ERP Implementation',
-        amount: 'Rp500.000.000',
-        status: 'Negotiation',
-        probability: 75,
-        contactId: 'budi-santoso',
-        activityLog: [
-          { label: 'Lead Created', date: 'Sep 24, 2023', done: true },
-          { label: 'Introductory Call Completed', date: 'Oct 02, 2023', done: true },
-          { label: 'Custom Technical Demo Done', date: 'Oct 08, 2023', done: true },
-          { label: 'Proposal Submitted & Received', date: 'Oct 15, 2023', done: true },
-        ],
-        information:
-          'Kita sempet kasih pricing Rp600jt tapi mereka ga setuju.',
-      },
-      {
-        id: 'crm-integration-service',
-        companyId: 'pt-maju-bersama',
-        name: 'CRM Integration Service',
-        amount: 'Rp150.000.000',
-        status: 'Won',
-        probability: 100,
-        contactId: 'andi-wijaya',
-        activityLog: [
-          { label: 'Lead Created', date: 'Aug 12, 2023', done: true },
-          { label: 'Contract Signed', date: 'Sep 05, 2023', done: true },
-        ],
-        information: 'Closed as part of the ERP bundle renewal.',
-      },
-    ],
-    contacts: [
-      {
-        contactId: 'budi-santoso',
-        name: 'Budi Santoso',
-        position: 'Head of Procurement',
-        phone: '08123456789',
-      },
-      {
-        contactId: 'andi-wijaya',
-        name: 'Andi Wijaya',
-        position: 'Chief Technical Officer',
-        phone: '08112233445',
-      },
-    ],
-  },
-  {
-    id: 'pt-sejahtera',
-    name: 'PT Sejahtera',
-    industry: 'Retail & Distribution',
-    tagline: 'Retail & Distribution Partner',
-    location: 'Bandung, ID',
-    website: 'www.sejahtera.co.id',
-    phone: '0225557890',
-    address: 'Jl. Braga No. 12, Bandung',
-    teamLeadOwner: 'Rina Kartika',
-    status: 'Prospect',
-    source: 'Cold Outreach',
-    dealStages: [
-      {
-        title: 'Call Completed',
-        description: 'Discovery call on current pain points',
-        date: 'Nov 2, 2023',
-        done: true,
-      },
-      {
-        title: 'Product Demo Scheduled',
-        description: 'Demo focused on reporting features',
-        date: 'Pending',
-        done: false,
-      },
-      {
-        title: 'Proposal Sent',
-        description: 'Awaiting requirements confirmation',
-        date: 'Pending',
-        done: false,
-      },
-      {
-        title: 'Negotiation',
-        description: 'Not started',
-        date: 'Pending',
-        done: false,
-      },
-    ],
-    deals: [
-      {
-        id: 'inventory-management-suite',
-        companyId: 'pt-sejahtera',
-        name: 'Inventory Management Suite',
-        amount: 'Rp220.000.000',
-        status: 'Proposal',
-        probability: 40,
-        contactId: 'sarah-wijaya',
-        activityLog: [
-          { label: 'Lead Created', date: 'Oct 28, 2023', done: true },
-          { label: 'Discovery Call Completed', date: 'Nov 02, 2023', done: true },
-          { label: 'Proposal Sent', date: 'Nov 09, 2023', done: false },
-        ],
-        information: 'Waiting on requirements sign-off before pricing talks.',
-      },
-    ],
-    contacts: [
-      {
-        contactId: 'sarah-wijaya',
-        name: 'Sarah Wijaya',
-        position: 'Procurement Lead',
-        phone: '08111111111',
-      },
-    ],
-  },
-  {
-    id: 'pt-nusantara',
-    name: 'PT Nusantara',
-    industry: 'Logistics',
-    tagline: 'Logistics & Fulfillment Partner',
-    location: 'Surabaya, ID',
-    website: 'www.nusantara.co.id',
-    phone: '0315559012',
-    address: 'Jl. Rungkut Industri, Surabaya',
-    teamLeadOwner: 'Dimas Prasetyo',
-    status: 'Customer',
-    source: 'Other',
-    dealStages: [
-      {
-        title: 'Call Completed',
-        description: 'Renewal discussion',
-        date: 'Sep 20, 2023',
-        done: true,
-      },
-      {
-        title: 'Product Demo Scheduled',
-        description: 'New feature walkthrough',
-        date: 'Sep 25, 2023',
-        done: true,
-      },
-      {
-        title: 'Proposal Sent',
-        description: 'Renewal contract sent',
-        date: 'Sep 28, 2023',
-        done: true,
-      },
-      {
-        title: 'Negotiation',
-        description: 'Signed renewal terms',
-        date: 'Oct 2, 2023',
-        done: true,
-      },
-    ],
-    deals: [
-      {
-        id: 'annual-license-renewal',
-        companyId: 'pt-nusantara',
-        name: 'Annual License Renewal',
-        amount: 'Rp180.000.000',
-        status: 'Won',
-        probability: 100,
-        contactId: 'ahmad-fauzi',
-        activityLog: [
-          { label: 'Renewal Discussion', date: 'Sep 20, 2023', done: true },
-          { label: 'Renewal Contract Sent', date: 'Sep 28, 2023', done: true },
-          { label: 'Renewal Terms Signed', date: 'Oct 02, 2023', done: true },
-        ],
-        information: 'Renewed at the same rate with a 12-month term.',
-      },
-    ],
-    contacts: [
-      {
-        contactId: 'ahmad-fauzi',
-        name: 'Ahmad Fauzi',
-        position: 'Operations Manager',
-        phone: '08222222222',
-      },
-    ],
-  },
-]
+export const COMPANIES: Company[] = []
 
 export function getCompanyById(id: string) {
   return COMPANIES.find((company) => company.id === id)
@@ -420,6 +205,19 @@ export interface EditCompanyInput {
   teamLeadOwner: string
   status: CompanyStatus
   source: CompanySource
+}
+
+export function addCompanyContact(
+  companyId: string,
+  contact: CompanyContact,
+): Company {
+  const company = getCompanyById(companyId)
+  if (!company) {
+    throw new Error(`Company not found: ${companyId}`)
+  }
+
+  company.contacts.push(contact)
+  return company
 }
 
 export function updateCompany(id: string, input: EditCompanyInput): Company {

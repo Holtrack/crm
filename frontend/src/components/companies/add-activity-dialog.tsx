@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/select'
 import { addActivity } from '@/data/activities'
 
-export const ACTIVITY_TYPES = ['Meeting', 'Call', 'Email', 'Demo', 'Follow Up', 'Note'] as const
+export const ACTIVITY_TYPES = ['WhatsApp', 'Call', 'Email', 'Demo', 'Follow Up', 'Meeting'] as const
 
 const formSchema = z.object({
   title: z.string().trim().min(3, 'Title is required'),
@@ -61,7 +61,7 @@ export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
     defaultValues: {
       title: '',
       context: '',
-      type: 'Meeting',
+      type: 'WhatsApp',
       date: '',
       time: '',
       summary: '',

@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { addContact, type ContactDetail } from '@/data/contacts'
-import { COMPANIES } from '@/data/companies'
+import { addCompanyContact, COMPANIES } from '@/data/companies'
 
 const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
 
@@ -48,18 +48,22 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
+interface AddContactDialogProps {
+  onCreated?: (contact: ContactDetail) => void
+  companyId?: string
+}
+
 export function AddContactDialog({
   onCreated,
-}: {
-  onCreated?: (contact: ContactDetail) => void
-}) {
+  companyId: lockedCompanyId,
+}: AddContactDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      companyId: '',
+      companyId: lockedCompanyId ?? '',
       email: '',
       phone: '',
       position: '',
@@ -83,6 +87,12 @@ export function AddContactDialog({
       owner: values.owner,
       status: values.status,
       notes: values.notes ?? '',
+    })
+    addCompanyContact(company.id, {
+      contactId: contact.id,
+      name: contact.name,
+      position: contact.position,
+      phone: contact.phone,
     })
     setOpen(false)
     form.reset()
@@ -130,30 +140,32 @@ export function AddContactDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="companyId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select company" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {COMPANIES.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!lockedCompanyId && (
+              <FormField
+                control={form.control}
+                name="companyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select company" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COMPANIES.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
