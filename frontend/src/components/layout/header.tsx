@@ -1,17 +1,11 @@
-import { Bell, Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Bell } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { GlobalSearch } from '@/components/layout/global-search'
 
 export function Header() {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b bg-white px-6">
-      <div className="relative w-full max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search contacts, companies, deals..."
-          className="pl-9"
-        />
-      </div>
+      <GlobalSearch />
 
       <div className="flex items-center gap-5">
         <button

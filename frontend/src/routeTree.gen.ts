@@ -18,6 +18,7 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as CompaniesContactIdRouteImport } from './routes/companies.$contactId'
 import { Route as CompaniesActivityActivityIdRouteImport } from './routes/companies.activity.$activityId'
+import { Route as CompaniesDealDealIdRouteImport } from './routes/companies.deal.$dealId'
 import { Route as CompaniesOrgCompanyIdRouteImport } from './routes/companies.org.$companyId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -66,6 +67,11 @@ const CompaniesActivityActivityIdRoute =
     path: '/activity/$activityId',
     getParentRoute: () => CompaniesRoute,
   } as any)
+const CompaniesDealDealIdRoute = CompaniesDealDealIdRouteImport.update({
+  id: '/deal/$dealId',
+  path: '/deal/$dealId',
+  getParentRoute: () => CompaniesRoute,
+} as any)
 const CompaniesOrgCompanyIdRoute = CompaniesOrgCompanyIdRouteImport.update({
   id: '/org/$companyId',
   path: '/org/$companyId',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/companies/$contactId': typeof CompaniesContactIdRoute
   '/companies/': typeof CompaniesIndexRoute
   '/companies/activity/$activityId': typeof CompaniesActivityActivityIdRoute
+  '/companies/deal/$dealId': typeof CompaniesDealDealIdRoute
   '/companies/org/$companyId': typeof CompaniesOrgCompanyIdRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/companies/$contactId': typeof CompaniesContactIdRoute
   '/companies': typeof CompaniesIndexRoute
   '/companies/activity/$activityId': typeof CompaniesActivityActivityIdRoute
+  '/companies/deal/$dealId': typeof CompaniesDealDealIdRoute
   '/companies/org/$companyId': typeof CompaniesOrgCompanyIdRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/companies/$contactId': typeof CompaniesContactIdRoute
   '/companies/': typeof CompaniesIndexRoute
   '/companies/activity/$activityId': typeof CompaniesActivityActivityIdRoute
+  '/companies/deal/$dealId': typeof CompaniesDealDealIdRoute
   '/companies/org/$companyId': typeof CompaniesOrgCompanyIdRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/companies/$contactId'
     | '/companies/'
     | '/companies/activity/$activityId'
+    | '/companies/deal/$dealId'
     | '/companies/org/$companyId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/companies/$contactId'
     | '/companies'
     | '/companies/activity/$activityId'
+    | '/companies/deal/$dealId'
     | '/companies/org/$companyId'
   id:
     | '__root__'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/companies/$contactId'
     | '/companies/'
     | '/companies/activity/$activityId'
+    | '/companies/deal/$dealId'
     | '/companies/org/$companyId'
   fileRoutesById: FileRoutesById
 }
@@ -220,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesActivityActivityIdRouteImport
       parentRoute: typeof CompaniesRoute
     }
+    '/companies/deal/$dealId': {
+      id: '/companies/deal/$dealId'
+      path: '/deal/$dealId'
+      fullPath: '/companies/deal/$dealId'
+      preLoaderRoute: typeof CompaniesDealDealIdRouteImport
+      parentRoute: typeof CompaniesRoute
+    }
     '/companies/org/$companyId': {
       id: '/companies/org/$companyId'
       path: '/org/$companyId'
@@ -234,6 +253,7 @@ interface CompaniesRouteChildren {
   CompaniesContactIdRoute: typeof CompaniesContactIdRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
   CompaniesActivityActivityIdRoute: typeof CompaniesActivityActivityIdRoute
+  CompaniesDealDealIdRoute: typeof CompaniesDealDealIdRoute
   CompaniesOrgCompanyIdRoute: typeof CompaniesOrgCompanyIdRoute
 }
 
@@ -241,6 +261,7 @@ const CompaniesRouteChildren: CompaniesRouteChildren = {
   CompaniesContactIdRoute: CompaniesContactIdRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
   CompaniesActivityActivityIdRoute: CompaniesActivityActivityIdRoute,
+  CompaniesDealDealIdRoute: CompaniesDealDealIdRoute,
   CompaniesOrgCompanyIdRoute: CompaniesOrgCompanyIdRoute,
 }
 

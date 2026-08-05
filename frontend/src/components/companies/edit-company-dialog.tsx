@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useRouter } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -30,11 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { addCompany } from '@/data/companies'
-import { addFollowUpTask } from '@/data/tasks'
+import { updateCompany, type Company } from '@/data/companies'
 
-const TEAM_OWNERS = ['Walid', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
-const SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Event', 'Other'] as const
+export const TEAM_OWNERS = ['Walid', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
+export const SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Event', 'Other'] as const
 
 const formSchema = z.object({
   name: z.string().trim().min(2, 'Company name is required'),
@@ -50,39 +48,42 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-export function AddCompanyDialog() {
+function regionFromLocation(location: string) {
+  return location.replace(/,\s*ID$/, '').trim()
+}
+
+interface EditCompanyDialogProps {
+  company: Company
+}
+
+export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
   const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      industry: '',
-      region: '',
-      website: '',
-      phone: '',
-      address: '',
-      teamLeadOwner: '',
-      status: 'Prospect',
-      source: 'Referral',
+      name: company.name,
+      industry: company.industry,
+      region: regionFromLocation(company.location),
+      website: company.website,
+      phone: company.phone,
+      address: company.address,
+      teamLeadOwner: company.teamLeadOwner,
+      status: company.status,
+      source: company.source,
     },
   })
 
   function onSubmit(values: FormValues) {
-    const company = addCompany({
+    updateCompany(company.id, {
       ...values,
       website: values.website ?? '',
       phone: values.phone ?? '',
       address: values.address ?? '',
     })
-    addFollowUpTask(company)
     setOpen(false)
-    form.reset()
-    navigate({
-      to: '/companies/org/$companyId',
-      params: { companyId: company.id },
-    })
+    router.invalidate()
   }
 
   return (
@@ -90,20 +91,29 @@ export function AddCompanyDialog() {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) form.reset()
+        if (next) {
+          form.reset({
+            name: company.name,
+            industry: company.industry,
+            region: regionFromLocation(company.location),
+            website: company.website,
+            phone: company.phone,
+            address: company.address,
+            teamLeadOwner: company.teamLeadOwner,
+            status: company.status,
+            source: company.source,
+          })
+        }
       }}
     >
       <DialogTrigger asChild>
-        <Button className="bg-blue-600 hover:bg-blue-600/90">
-          <Plus className="size-4" />
-          Add Company
-        </Button>
+        <Button variant="outline">Edit Company Profile</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Company</DialogTitle>
+          <DialogTitle>Edit Company Profile</DialogTitle>
           <DialogDescription>
-            Create a new company profile in your pipeline.
+            Update this company&apos;s corporate details.
           </DialogDescription>
         </DialogHeader>
 
@@ -287,7 +297,7 @@ export function AddCompanyDialog() {
                 Cancel
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Create Company
+                Save Changes
               </Button>
             </DialogFooter>
           </form>

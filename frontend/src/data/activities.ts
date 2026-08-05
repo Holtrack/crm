@@ -94,3 +94,35 @@ export function addActivity(
   ACTIVITIES.push(activity)
   return activity
 }
+
+export interface EditActivityInput {
+  title: string
+  context: string
+  type: ActivityType
+  datetime: string
+  participantIds: string[]
+  summary: string
+}
+
+export function updateActivity(
+  id: string,
+  input: EditActivityInput,
+  contactsById: Map<string, string>,
+): Activity {
+  const activity = getActivityById(id)
+  if (!activity) {
+    throw new Error(`Activity not found: ${id}`)
+  }
+
+  activity.title = input.title
+  activity.context = input.context
+  activity.type = input.type
+  activity.datetime = input.datetime
+  activity.participants = input.participantIds.map((contactId) => ({
+    contactId,
+    name: contactsById.get(contactId) ?? contactId,
+  }))
+  activity.summary = input.summary
+
+  return activity
+}

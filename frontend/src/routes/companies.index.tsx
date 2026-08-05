@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Search, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Search, Building2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -17,10 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { AvatarInitial } from '@/components/dashboard/avatar-initial'
-import { StatusBadge } from '@/components/dashboard/status-badge'
+import { CompanyStatusBadge } from '@/components/dashboard/company-status-badge'
 import { AddCompanyDialog } from '@/components/companies/add-company-dialog'
-import { CONTACTS } from '@/data/contacts'
+import { COMPANIES } from '@/data/companies'
 
 export const Route = createFileRoute('/companies/')({
   component: CompaniesPage,
@@ -38,17 +36,13 @@ function CompaniesPage() {
         </div>
         <div className="flex gap-2">
           <AddCompanyDialog />
-          <Button className="bg-blue-600 hover:bg-blue-600/90">
-            <Plus className="size-4" />
-            Add Contact
-          </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Filter by name or company..." className="pl-9" />
+          <Input placeholder="Filter by company name..." className="pl-9" />
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-full sm:w-40">
@@ -78,43 +72,43 @@ function CompaniesPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
               <TableHead>Company</TableHead>
+              <TableHead>Industry</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Phone</TableHead>
-              <TableHead>Owner</TableHead>
+              <TableHead>Team Lead Owner</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {CONTACTS.map((contact) => (
-              <TableRow key={contact.id} className="cursor-pointer">
-                <TableCell className="p-0">
-                  <Link
-                    to="/companies/$contactId"
-                    params={{ contactId: contact.id }}
-                    className="flex items-center gap-3 px-2 py-2"
-                  >
-                    <AvatarInitial name={contact.name} />
-                    <span className="font-medium">{contact.name}</span>
-                  </Link>
-                </TableCell>
+            {COMPANIES.map((company) => (
+              <TableRow key={company.id} className="cursor-pointer">
                 <TableCell className="p-0">
                   <Link
                     to="/companies/org/$companyId"
-                    params={{ companyId: contact.companyId }}
-                    className="block px-2 py-2 text-muted-foreground hover:text-blue-600 hover:underline"
+                    params={{ companyId: company.id }}
+                    className="flex items-center gap-3 px-2 py-2"
                   >
-                    {contact.company}
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
+                      <Building2 className="size-4" />
+                    </span>
+                    <span className="font-medium">{company.name}</span>
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {contact.phone}
+                  {company.industry}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {contact.owner}
+                  {company.location}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {company.phone}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {company.teamLeadOwner}
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={contact.status} />
+                  <CompanyStatusBadge status={company.status} />
                 </TableCell>
               </TableRow>
             ))}
