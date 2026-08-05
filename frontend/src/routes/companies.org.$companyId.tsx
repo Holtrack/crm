@@ -51,7 +51,7 @@ function CompanyDetailPage() {
           <Button className="bg-blue-600 hover:bg-blue-600/90">
             + Add Contact
           </Button>
-          <AddActivityDialog companyId={company.id} contacts={company.contacts} />
+          <AddActivityDialog companyId={company.id} />
         </div>
       </div>
 

@@ -32,7 +32,15 @@ import {
 import { updateCompany, type Company } from '@/data/companies'
 
 export const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
-export const SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Event', 'Other'] as const
+export const SOURCES = [
+  'Website Contact Form',
+  'Cold Outreach',
+  'Existing Client Referral',
+  'Charissa',
+  'Brantley',
+  'Delvin',
+  'Other',
+] as const
 
 const formSchema = z.object({
   name: z.string().trim().min(2, 'Company name is required'),

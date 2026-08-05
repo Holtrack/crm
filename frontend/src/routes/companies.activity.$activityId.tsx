@@ -4,7 +4,6 @@ import { CalendarDays, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -13,24 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AvatarInitial } from '@/components/dashboard/avatar-initial'
 import { ACTIVITY_TYPES } from '@/components/companies/add-activity-dialog'
 import { getActivityById, updateActivity } from '@/data/activities'
-import { getCompanyById } from '@/data/companies'
 
 export const Route = createFileRoute('/companies/activity/$activityId')({
   loader: ({ params }) => {
     const activity = getActivityById(params.activityId)
     if (!activity) throw notFound()
-    const company = getCompanyById(activity.companyId)
-    if (!company) throw notFound()
-    return { activity, contacts: company.contacts }
+    return { activity }
   },
   component: ActivityDetailPage,
 })
 
 function ActivityDetailPage() {
-  const { activity, contacts } = Route.useLoaderData()
+  const { activity } = Route.useLoaderData()
   const router = useRouter()
 
   const [editing, setEditing] = useState(false)
@@ -39,7 +34,6 @@ function ActivityDetailPage() {
     context: activity.context,
     type: activity.type,
     datetime: activity.datetime,
-    participantIds: activity.participants.map((p) => p.contactId),
     summary: activity.summary,
   }))
 
@@ -49,7 +43,6 @@ function ActivityDetailPage() {
       context: activity.context,
       type: activity.type,
       datetime: activity.datetime,
-      participantIds: activity.participants.map((p) => p.contactId),
       summary: activity.summary,
     })
     setEditing(true)
@@ -60,8 +53,7 @@ function ActivityDetailPage() {
   }
 
   function save() {
-    const contactsById = new Map(contacts.map((c) => [c.contactId, c.name]))
-    updateActivity(activity.id, values, contactsById)
+    updateActivity(activity.id, values)
     setEditing(false)
     router.invalidate()
   }
@@ -165,58 +157,6 @@ function ActivityDetailPage() {
               />
             ) : (
               <span className="text-sm font-medium">{activity.datetime}</span>
-            )}
-          </div>
-          <div className="flex items-start justify-between py-3">
-            <span className="pt-1 text-sm text-muted-foreground">
-              Participants
-            </span>
-            {editing ? (
-              <div className="flex flex-col gap-2">
-                {contacts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    This company has no contacts yet.
-                  </p>
-                ) : (
-                  contacts.map((contact) => (
-                    <label
-                      key={contact.contactId}
-                      className="flex items-center justify-end gap-2 text-sm"
-                    >
-                      {contact.name}
-                      <Checkbox
-                        checked={values.participantIds.includes(
-                          contact.contactId,
-                        )}
-                        onCheckedChange={(checked) =>
-                          setValues((prev) => ({
-                            ...prev,
-                            participantIds: checked
-                              ? [...prev.participantIds, contact.contactId]
-                              : prev.participantIds.filter(
-                                  (id) => id !== contact.contactId,
-                                ),
-                          }))
-                        }
-                      />
-                    </label>
-                  ))
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-wrap justify-end gap-2">
-                {activity.participants.map((participant) => (
-                  <span
-                    key={participant.contactId}
-                    className="flex items-center gap-1.5"
-                  >
-                    <AvatarInitial name={participant.name} />
-                    <span className="text-sm font-medium">
-                      {participant.name}
-                    </span>
-                  </span>
-                ))}
-              </div>
             )}
           </div>
           <div className="py-3 last:pb-0">

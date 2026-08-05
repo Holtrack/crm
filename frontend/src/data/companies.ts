@@ -3,10 +3,12 @@ import type { DealStage } from '@/data/contacts'
 export type DealStatus = 'Negotiation' | 'Won' | 'Lost' | 'Proposal'
 export type CompanyStatus = 'Prospect' | 'Active' | 'Customer'
 export type CompanySource =
-  | 'Referral'
+  | 'Website Contact Form'
   | 'Cold Outreach'
-  | 'Inbound'
-  | 'Event'
+  | 'Existing Client Referral'
+  | 'Charissa'
+  | 'Brantley'
+  | 'Delvin'
   | 'Other'
 
 export interface DealActivityLogEntry {
@@ -63,7 +65,7 @@ export const COMPANIES: Company[] = [
     address: 'Graha Multi, Kuningan, Jakarta',
     teamLeadOwner: 'Andi Wijaya',
     status: 'Active',
-    source: 'Referral',
+    source: 'Existing Client Referral',
     dealStages: [
       {
         title: 'Call Completed',
@@ -213,7 +215,7 @@ export const COMPANIES: Company[] = [
     address: 'Jl. Rungkut Industri, Surabaya',
     teamLeadOwner: 'Dimas Prasetyo',
     status: 'Customer',
-    source: 'Event',
+    source: 'Other',
     dealStages: [
       {
         title: 'Call Completed',
