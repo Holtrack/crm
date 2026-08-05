@@ -6,11 +6,6 @@ export type ActivityType =
   | 'Follow Up'
   | 'Meeting'
 
-export interface ActivityParticipant {
-  contactId: string
-  name: string
-}
-
 export interface Activity {
   id: string
   companyId: string
@@ -18,7 +13,6 @@ export interface Activity {
   context: string
   type: ActivityType
   datetime: string
-  participants: ActivityParticipant[]
   summary: string
 }
 
@@ -39,7 +33,6 @@ export interface NewActivityInput {
   type: ActivityType
   date: string
   time: string
-  participantIds: string[]
   summary: string
 }
 
@@ -59,10 +52,7 @@ function formatDateTime(date: string, time: string) {
   return `${datePart}, ${timePart}`
 }
 
-export function addActivity(
-  input: NewActivityInput,
-  contactsById: Map<string, string>,
-): Activity {
+export function addActivity(input: NewActivityInput): Activity {
   const id = `act-${input.companyId}-${ACTIVITIES.length + 1}`
 
   const activity: Activity = {
@@ -72,10 +62,6 @@ export function addActivity(
     context: input.context,
     type: input.type,
     datetime: formatDateTime(input.date, input.time),
-    participants: input.participantIds.map((contactId) => ({
-      contactId,
-      name: contactsById.get(contactId) ?? contactId,
-    })),
     summary: input.summary,
   }
 
@@ -88,15 +74,10 @@ export interface EditActivityInput {
   context: string
   type: ActivityType
   datetime: string
-  participantIds: string[]
   summary: string
 }
 
-export function updateActivity(
-  id: string,
-  input: EditActivityInput,
-  contactsById: Map<string, string>,
-): Activity {
+export function updateActivity(id: string, input: EditActivityInput): Activity {
   const activity = getActivityById(id)
   if (!activity) {
     throw new Error(`Activity not found: ${id}`)
@@ -106,10 +87,6 @@ export function updateActivity(
   activity.context = input.context
   activity.type = input.type
   activity.datetime = input.datetime
-  activity.participants = input.participantIds.map((contactId) => ({
-    contactId,
-    name: contactsById.get(contactId) ?? contactId,
-  }))
   activity.summary = input.summary
 
   return activity

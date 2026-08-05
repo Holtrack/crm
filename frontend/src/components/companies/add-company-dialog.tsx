@@ -34,7 +34,15 @@ import { addCompany } from '@/data/companies'
 import { addFollowUpTask } from '@/data/tasks'
 
 const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
-const SOURCES = ['Referral', 'Cold Outreach', 'Inbound', 'Event', 'Other'] as const
+const SOURCES = [
+  'Website Contact Form',
+  'Cold Outreach',
+  'Existing Client Referral',
+  'Charissa',
+  'Brantley',
+  'Delvin',
+  'Other',
+] as const
 
 const formSchema = z.object({
   name: z.string().trim().min(2, 'Company name is required'),
@@ -65,7 +73,7 @@ export function AddCompanyDialog() {
       address: '',
       teamLeadOwner: '',
       status: 'Prospect',
-      source: 'Referral',
+      source: 'Website Contact Form',
     },
   })
 

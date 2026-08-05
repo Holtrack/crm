@@ -38,14 +38,47 @@ export function slugifyContactName(name: string) {
 
 export interface NewContactInput {
   name: string
+  company: string
   companyId: string
-  companyName: string
   email: string
   phone: string
   position: string
   owner: string
   status: ContactStatus
-  notes?: string
+  notes: string
+}
+
+export interface UpdateContactInput {
+  name: string
+  company: string
+  companyId: string
+  email: string
+  phone: string
+  position: string
+  owner: string
+  status: ContactStatus
+}
+
+export function updateContact(
+  id: string,
+  input: UpdateContactInput,
+): ContactDetail {
+  const contact = getContactById(id)
+  if (!contact) {
+    throw new Error(`Contact not found: ${id}`)
+  }
+
+  contact.name = input.name
+  contact.title = `${input.position} at ${input.company}`
+  contact.company = input.company
+  contact.companyId = input.companyId
+  contact.email = input.email
+  contact.phone = input.phone
+  contact.position = input.position
+  contact.owner = input.owner
+  contact.status = input.status
+
+  return contact
 }
 
 export function addContact(input: NewContactInput): ContactDetail {
@@ -57,15 +90,15 @@ export function addContact(input: NewContactInput): ContactDetail {
   const contact: ContactDetail = {
     id,
     name: input.name,
-    title: `${input.position} at ${input.companyName}`,
-    company: input.companyName,
+    title: `${input.position} at ${input.company}`,
+    company: input.company,
     companyId: input.companyId,
     email: input.email,
     phone: input.phone,
     position: input.position,
     owner: input.owner,
     status: input.status,
-    notes: input.notes ?? '',
+    notes: input.notes,
     dealStages: [],
   }
 

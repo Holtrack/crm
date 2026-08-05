@@ -7,7 +7,8 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
+import { DatePicker } from '@/components/ui/date-picker'
+import { TimeSelect } from '@/components/ui/time-select'
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { addActivity } from '@/data/activities'
-import type { CompanyContact } from '@/data/companies'
 
 export const ACTIVITY_TYPES = ['WhatsApp', 'Call', 'Email', 'Demo', 'Follow Up', 'Meeting'] as const
 
@@ -43,7 +43,6 @@ const formSchema = z.object({
   type: z.enum(ACTIVITY_TYPES),
   date: z.string().min(1, 'Date is required'),
   time: z.string().min(1, 'Time is required'),
-  participantIds: z.array(z.string()).min(1, 'Select at least one participant'),
   summary: z.string().trim().min(5, 'Summary is required'),
 })
 
@@ -51,13 +50,9 @@ type FormValues = z.infer<typeof formSchema>
 
 interface AddActivityDialogProps {
   companyId: string
-  contacts: CompanyContact[]
 }
 
-export function AddActivityDialog({
-  companyId,
-  contacts,
-}: AddActivityDialogProps) {
+export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -69,16 +64,12 @@ export function AddActivityDialog({
       type: 'WhatsApp',
       date: '',
       time: '',
-      participantIds: [],
       summary: '',
     },
   })
 
   function onSubmit(values: FormValues) {
-    const contactsById = new Map(
-      contacts.map((contact) => [contact.contactId, contact.name]),
-    )
-    const activity = addActivity({ ...values, companyId }, contactsById)
+    const activity = addActivity({ ...values, companyId })
     setOpen(false)
     form.reset()
     navigate({
@@ -180,7 +171,11 @@ export function AddActivityDialog({
                   <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Pick a date"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -193,62 +188,17 @@ export function AddActivityDialog({
                   <FormItem>
                     <FormLabel>Time</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <TimeSelect
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select time"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="participantIds"
-              render={() => (
-                <FormItem>
-                  <FormLabel>Participants</FormLabel>
-                  {contacts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      This company has no contacts yet.
-                    </p>
-                  ) : (
-                    <div className="flex flex-col gap-2 rounded-lg border p-3">
-                      {contacts.map((contact) => (
-                        <FormField
-                          key={contact.contactId}
-                          control={form.control}
-                          name="participantIds"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center gap-2">
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(
-                                    contact.contactId,
-                                  )}
-                                  onCheckedChange={(checked) => {
-                                    field.onChange(
-                                      checked
-                                        ? [...field.value, contact.contactId]
-                                        : field.value.filter(
-                                            (id) => id !== contact.contactId,
-                                          ),
-                                    )
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="text-sm font-normal">
-                                {contact.name}
-                              </FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}

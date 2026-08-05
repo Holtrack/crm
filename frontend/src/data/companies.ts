@@ -3,10 +3,12 @@ import type { DealStage } from '@/data/contacts'
 export type DealStatus = 'Negotiation' | 'Won' | 'Lost' | 'Proposal'
 export type CompanyStatus = 'Prospect' | 'Active' | 'Customer'
 export type CompanySource =
-  | 'Referral'
+  | 'Website Contact Form'
   | 'Cold Outreach'
-  | 'Inbound'
-  | 'Event'
+  | 'Existing Client Referral'
+  | 'Charissa'
+  | 'Brantley'
+  | 'Delvin'
   | 'Other'
 
 export interface DealActivityLogEntry {

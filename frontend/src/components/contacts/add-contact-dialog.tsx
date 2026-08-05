@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -31,43 +30,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { addContact } from '@/data/contacts'
-import { addCompanyContact } from '@/data/companies'
+import { addContact, type ContactDetail } from '@/data/contacts'
+import { addCompanyContact, COMPANIES } from '@/data/companies'
 
-const OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
-const STATUSES = ['Prospect', 'Active', 'Customer'] as const
+const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
 
 const formSchema = z.object({
   name: z.string().trim().min(2, 'Contact name is required'),
-  position: z.string().trim().min(2, 'Position is required'),
-  email: z.string().trim().email('Enter a valid email'),
+  companyId: z.string().min(1, 'Select a company'),
+  email: z.string().trim().email('Enter a valid email address'),
   phone: z.string().trim().min(6, 'Phone number is required'),
-  owner: z.string().min(1, 'Select an owner'),
-  status: z.enum(STATUSES),
+  position: z.string().trim().min(2, 'Position is required'),
+  owner: z.string().min(1, 'Select a contact owner'),
+  status: z.enum(['Prospect', 'Active', 'Customer']),
   notes: z.string().trim().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
 interface AddContactDialogProps {
-  companyId: string
-  companyName: string
+  onCreated?: (contact: ContactDetail) => void
+  companyId?: string
 }
 
 export function AddContactDialog({
-  companyId,
-  companyName,
+  onCreated,
+  companyId: lockedCompanyId,
 }: AddContactDialogProps) {
   const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      position: '',
+      companyId: lockedCompanyId ?? '',
       email: '',
       phone: '',
+      position: '',
       owner: '',
       status: 'Prospect',
       notes: '',
@@ -75,12 +74,21 @@ export function AddContactDialog({
   })
 
   function onSubmit(values: FormValues) {
+    const company = COMPANIES.find((c) => c.id === values.companyId)
+    if (!company) return
+
     const contact = addContact({
-      ...values,
-      companyId,
-      companyName,
+      name: values.name,
+      company: company.name,
+      companyId: company.id,
+      email: values.email,
+      phone: values.phone,
+      position: values.position,
+      owner: values.owner,
+      status: values.status,
+      notes: values.notes ?? '',
     })
-    addCompanyContact(companyId, {
+    addCompanyContact(company.id, {
       contactId: contact.id,
       name: contact.name,
       position: contact.position,
@@ -88,10 +96,7 @@ export function AddContactDialog({
     })
     setOpen(false)
     form.reset()
-    navigate({
-      to: '/companies/$contactId',
-      params: { contactId: contact.id },
-    })
+    onCreated?.(contact)
   }
 
   return (
@@ -112,7 +117,7 @@ export function AddContactDialog({
         <DialogHeader>
           <DialogTitle>Add Contact</DialogTitle>
           <DialogDescription>
-            Add a new contact linked to {companyName}.
+            Create a new contact linked to a company.
           </DialogDescription>
         </DialogHeader>
 
@@ -135,19 +140,32 @@ export function AddContactDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="position"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Position</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Head of Procurement" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!lockedCompanyId && (
+              <FormField
+                control={form.control}
+                name="companyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select company" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COMPANIES.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -155,9 +173,9 @@ export function AddContactDialog({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      <Input placeholder="name@company.com" {...field} />
+                      <Input placeholder="budi@contoh.co.id" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,21 +196,38 @@ export function AddContactDialog({
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="position"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Position</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Head of Procurement" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="owner"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Owner</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <FormLabel>Contact Owner</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select owner" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {OWNERS.map((owner) => (
+                        {TEAM_OWNERS.map((owner) => (
                           <SelectItem key={owner} value={owner}>
                             {owner}
                           </SelectItem>
@@ -209,18 +244,19 @@ export function AddContactDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {STATUSES.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Prospect">Prospect</SelectItem>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Customer">Customer</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -237,8 +273,7 @@ export function AddContactDialog({
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Anything worth remembering about this contact?"
-                      rows={3}
+                      placeholder="Any context worth remembering about this contact..."
                       {...field}
                     />
                   </FormControl>

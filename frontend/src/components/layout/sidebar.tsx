@@ -2,6 +2,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import {
   LayoutGrid,
   Building2,
+  Users,
   GitBranch,
   CheckSquare,
   Settings,
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils'
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/', icon: LayoutGrid },
   { label: 'Companies', to: '/companies', icon: Building2 },
+  { label: 'Contacts', to: '/contacts', icon: Users },
   { label: 'Pipeline', to: '/pipeline', icon: GitBranch },
   { label: 'Tasks', to: '/tasks', icon: CheckSquare },
   { label: 'Settings', to: '/settings', icon: Settings },
