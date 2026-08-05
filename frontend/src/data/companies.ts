@@ -1,6 +1,13 @@
 import type { DealStage } from '@/data/contacts'
 
 export type DealStatus = 'Negotiation' | 'Won' | 'Lost' | 'Proposal'
+export type CompanyStatus = 'Prospect' | 'Active' | 'Customer'
+export type CompanySource =
+  | 'Referral'
+  | 'Cold Outreach'
+  | 'Inbound'
+  | 'Event'
+  | 'Other'
 
 export interface Deal {
   name: string
@@ -22,8 +29,11 @@ export interface Company {
   tagline: string
   location: string
   website: string
+  phone: string
   address: string
   teamLeadOwner: string
+  status: CompanyStatus
+  source: CompanySource
   dealStages: DealStage[]
   deals: Deal[]
   contacts: CompanyContact[]
@@ -37,8 +47,11 @@ export const COMPANIES: Company[] = [
     tagline: 'Technology & Manufacturing Partner',
     location: 'Jakarta, ID',
     website: 'www.majubersama.co.id',
+    phone: '0215551234',
     address: 'Graha Multi, Kuningan, Jakarta',
     teamLeadOwner: 'Andi Wijaya',
+    status: 'Active',
+    source: 'Referral',
     dealStages: [
       {
         title: 'Call Completed',
@@ -91,8 +104,11 @@ export const COMPANIES: Company[] = [
     tagline: 'Retail & Distribution Partner',
     location: 'Bandung, ID',
     website: 'www.sejahtera.co.id',
+    phone: '0225557890',
     address: 'Jl. Braga No. 12, Bandung',
     teamLeadOwner: 'Rina Kartika',
+    status: 'Prospect',
+    source: 'Cold Outreach',
     dealStages: [
       {
         title: 'Call Completed',
@@ -138,8 +154,11 @@ export const COMPANIES: Company[] = [
     tagline: 'Logistics & Fulfillment Partner',
     location: 'Surabaya, ID',
     website: 'www.nusantara.co.id',
+    phone: '0315559012',
     address: 'Jl. Rungkut Industri, Surabaya',
     teamLeadOwner: 'Dimas Prasetyo',
+    status: 'Customer',
+    source: 'Event',
     dealStages: [
       {
         title: 'Call Completed',
@@ -182,4 +201,51 @@ export const COMPANIES: Company[] = [
 
 export function getCompanyById(id: string) {
   return COMPANIES.find((company) => company.id === id)
+}
+
+export function slugifyCompanyName(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+export interface NewCompanyInput {
+  name: string
+  industry: string
+  region: string
+  website: string
+  phone: string
+  address: string
+  teamLeadOwner: string
+  status: CompanyStatus
+  source: CompanySource
+}
+
+export function addCompany(input: NewCompanyInput): Company {
+  const slug = slugifyCompanyName(input.name)
+  const id = COMPANIES.some((company) => company.id === slug)
+    ? `${slug}-${COMPANIES.length + 1}`
+    : slug
+
+  const company: Company = {
+    id,
+    name: input.name,
+    industry: input.industry,
+    tagline: `${input.industry} Partner`,
+    location: `${input.region}, ID`,
+    website: input.website,
+    phone: input.phone,
+    address: input.address,
+    teamLeadOwner: input.teamLeadOwner,
+    status: input.status,
+    source: input.source,
+    dealStages: [],
+    deals: [],
+    contacts: [],
+  }
+
+  COMPANIES.push(company)
+  return company
 }

@@ -17,6 +17,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as CompaniesContactIdRouteImport } from './routes/companies.$contactId'
+import { Route as CompaniesActivityActivityIdRouteImport } from './routes/companies.activity.$activityId'
 import { Route as CompaniesOrgCompanyIdRouteImport } from './routes/companies.org.$companyId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,12 @@ const CompaniesContactIdRoute = CompaniesContactIdRouteImport.update({
   path: '/$contactId',
   getParentRoute: () => CompaniesRoute,
 } as any)
+const CompaniesActivityActivityIdRoute =
+  CompaniesActivityActivityIdRouteImport.update({
+    id: '/activity/$activityId',
+    path: '/activity/$activityId',
+    getParentRoute: () => CompaniesRoute,
+  } as any)
 const CompaniesOrgCompanyIdRoute = CompaniesOrgCompanyIdRouteImport.update({
   id: '/org/$companyId',
   path: '/org/$companyId',
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof TasksRoute
   '/companies/$contactId': typeof CompaniesContactIdRoute
   '/companies/': typeof CompaniesIndexRoute
+  '/companies/activity/$activityId': typeof CompaniesActivityActivityIdRoute
   '/companies/org/$companyId': typeof CompaniesOrgCompanyIdRoute
 }
 export interface FileRoutesByTo {
@@ -84,6 +92,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof TasksRoute
   '/companies/$contactId': typeof CompaniesContactIdRoute
   '/companies': typeof CompaniesIndexRoute
+  '/companies/activity/$activityId': typeof CompaniesActivityActivityIdRoute
   '/companies/org/$companyId': typeof CompaniesOrgCompanyIdRoute
 }
 export interface FileRoutesById {
@@ -96,6 +105,7 @@ export interface FileRoutesById {
   '/tasks': typeof TasksRoute
   '/companies/$contactId': typeof CompaniesContactIdRoute
   '/companies/': typeof CompaniesIndexRoute
+  '/companies/activity/$activityId': typeof CompaniesActivityActivityIdRoute
   '/companies/org/$companyId': typeof CompaniesOrgCompanyIdRoute
 }
 export interface FileRouteTypes {
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/companies/$contactId'
     | '/companies/'
+    | '/companies/activity/$activityId'
     | '/companies/org/$companyId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/companies/$contactId'
     | '/companies'
+    | '/companies/activity/$activityId'
     | '/companies/org/$companyId'
   id:
     | '__root__'
@@ -130,6 +142,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/companies/$contactId'
     | '/companies/'
+    | '/companies/activity/$activityId'
     | '/companies/org/$companyId'
   fileRoutesById: FileRoutesById
 }
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesContactIdRouteImport
       parentRoute: typeof CompaniesRoute
     }
+    '/companies/activity/$activityId': {
+      id: '/companies/activity/$activityId'
+      path: '/activity/$activityId'
+      fullPath: '/companies/activity/$activityId'
+      preLoaderRoute: typeof CompaniesActivityActivityIdRouteImport
+      parentRoute: typeof CompaniesRoute
+    }
     '/companies/org/$companyId': {
       id: '/companies/org/$companyId'
       path: '/org/$companyId'
@@ -213,12 +233,14 @@ declare module '@tanstack/react-router' {
 interface CompaniesRouteChildren {
   CompaniesContactIdRoute: typeof CompaniesContactIdRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
+  CompaniesActivityActivityIdRoute: typeof CompaniesActivityActivityIdRoute
   CompaniesOrgCompanyIdRoute: typeof CompaniesOrgCompanyIdRoute
 }
 
 const CompaniesRouteChildren: CompaniesRouteChildren = {
   CompaniesContactIdRoute: CompaniesContactIdRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
+  CompaniesActivityActivityIdRoute: CompaniesActivityActivityIdRoute,
   CompaniesOrgCompanyIdRoute: CompaniesOrgCompanyIdRoute,
 }
 

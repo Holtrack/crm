@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/table'
 import { AvatarInitial } from '@/components/dashboard/avatar-initial'
 import { StatusBadge } from '@/components/dashboard/status-badge'
+import { AddCompanyDialog } from '@/components/companies/add-company-dialog'
 import { CONTACTS } from '@/data/contacts'
 
 export const Route = createFileRoute('/companies/')({
@@ -35,10 +36,13 @@ function CompaniesPage() {
             Manage your B2B prospects and clients.
           </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-600/90">
-          <Plus className="size-4" />
-          Add Contact
-        </Button>
+        <div className="flex gap-2">
+          <AddCompanyDialog />
+          <Button className="bg-blue-600 hover:bg-blue-600/90">
+            <Plus className="size-4" />
+            Add Contact
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center">
