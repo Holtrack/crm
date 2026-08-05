@@ -7,8 +7,8 @@ import {
   Phone,
   Mail,
   Presentation,
-  StickyNote,
   CalendarClock,
+  MessageCircle,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatCard } from '@/components/dashboard/stat-card'
@@ -28,7 +28,7 @@ const ACTIVITY_ICONS = {
   Email: Mail,
   Demo: Presentation,
   'Follow Up': CalendarClock,
-  Note: StickyNote,
+  WhatsApp: MessageCircle,
 } as const
 
 const URGENCY_DOT_STYLES = {
