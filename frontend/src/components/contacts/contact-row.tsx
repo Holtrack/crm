@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Check, Pencil, X } from 'lucide-react'
+import { Check, Pencil, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -11,12 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { AvatarInitial } from '@/components/dashboard/avatar-initial'
-import { StatusBadge } from '@/components/dashboard/status-badge'
-import { COMPANIES } from '@/data/companies'
-import { updateContact, type ContactDetail } from '@/data/contacts'
-
-const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
+import { COMPANIES, removeCompanyContact } from '@/data/companies'
+import { deleteContact, updateContact, type ContactDetail } from '@/data/contacts'
+import { TEAM_OWNERS } from '@/data/owners'
 
 interface EditState {
   name: string
@@ -25,7 +31,6 @@ interface EditState {
   email: string
   phone: string
   owner: string
-  status: ContactDetail['status']
 }
 
 function toEditState(contact: ContactDetail): EditState {
@@ -36,18 +41,20 @@ function toEditState(contact: ContactDetail): EditState {
     email: contact.email,
     phone: contact.phone,
     owner: contact.owner,
-    status: contact.status,
   }
 }
 
 export function ContactRow({
   contact,
   onUpdated,
+  onDeleted,
 }: {
   contact: ContactDetail
   onUpdated: (contact: ContactDetail) => void
+  onDeleted?: (contactId: string) => void
 }) {
   const [editing, setEditing] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [draft, setDraft] = useState<EditState>(() => toEditState(contact))
 
   function startEditing() {
@@ -71,11 +78,42 @@ export function ContactRow({
       phone: draft.phone.trim(),
       position: draft.position.trim(),
       owner: draft.owner,
-      status: draft.status,
     })
     onUpdated(updated)
     setEditing(false)
   }
+
+  function confirmDelete() {
+    deleteContact(contact.id)
+    removeCompanyContact(contact.companyId, contact.id)
+    setConfirmingDelete(false)
+    onDeleted?.(contact.id)
+  }
+
+  const deleteDialog = (
+    <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Delete {contact.name}?</DialogTitle>
+          <DialogDescription>
+            This will permanently remove this contact. This action cannot be
+            undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
+            Cancel
+          </Button>
+          <Button
+            className="bg-red-600 hover:bg-red-600/90"
+            onClick={confirmDelete}
+          >
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 
   if (!editing) {
     return (
@@ -112,18 +150,26 @@ export function ContactRow({
           {contact.owner}
         </TableCell>
         <TableCell>
-          <StatusBadge status={contact.status} />
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={startEditing}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-destructive"
+              onClick={() => setConfirmingDelete(true)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
         </TableCell>
-        <TableCell>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 opacity-0 group-hover:opacity-100"
-            onClick={startEditing}
-          >
-            <Pencil className="size-4" />
-          </Button>
-        </TableCell>
+        {deleteDialog}
       </TableRow>
     )
   }
@@ -189,23 +235,6 @@ export function ContactRow({
                 {owner}
               </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-      </TableCell>
-      <TableCell>
-        <Select
-          value={draft.status}
-          onValueChange={(value) =>
-            setDraft({ ...draft, status: value as EditState['status'] })
-          }
-        >
-          <SelectTrigger className="h-8 w-full">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Prospect">Prospect</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Customer">Customer</SelectItem>
           </SelectContent>
         </Select>
       </TableCell>

@@ -1,11 +1,10 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
+import { useRouter } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -30,8 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { addContact, type ContactDetail } from '@/data/contacts'
-import { addCompanyContact, COMPANIES } from '@/data/companies'
+import { updateContact, type ContactDetail } from '@/data/contacts'
+import { COMPANIES } from '@/data/companies'
 import { TEAM_OWNERS } from '@/data/owners'
 
 const formSchema = z.object({
@@ -46,42 +45,39 @@ const formSchema = z.object({
   phone: z.string().trim().optional(),
   position: z.string().trim().optional(),
   owner: z.string().min(1, 'Select a contact owner'),
-  notes: z.string().trim().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-interface AddContactDialogProps {
-  onCreated?: (contact: ContactDetail) => void
-  companyId?: string
-  trigger?: ReactNode
+interface EditContactDialogProps {
+  contact: ContactDetail
 }
 
-export function AddContactDialog({
-  onCreated,
-  companyId: lockedCompanyId,
-  trigger,
-}: AddContactDialogProps) {
+function valuesFrom(contact: ContactDetail): FormValues {
+  return {
+    name: contact.name,
+    companyId: contact.companyId,
+    email: contact.email,
+    phone: contact.phone,
+    position: contact.position,
+    owner: contact.owner,
+  }
+}
+
+export function EditContactDialog({ contact }: EditContactDialogProps) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      companyId: lockedCompanyId ?? '',
-      email: '',
-      phone: '',
-      position: '',
-      owner: '',
-      notes: '',
-    },
+    defaultValues: valuesFrom(contact),
   })
 
   function onSubmit(values: FormValues) {
     const company = COMPANIES.find((c) => c.id === values.companyId)
     if (!company) return
 
-    const contact = addContact({
+    updateContact(contact.id, {
       name: values.name,
       company: company.name,
       companyId: company.id,
@@ -89,17 +85,9 @@ export function AddContactDialog({
       phone: values.phone ?? '',
       position: values.position ?? '',
       owner: values.owner,
-      notes: values.notes ?? '',
-    })
-    addCompanyContact(company.id, {
-      contactId: contact.id,
-      name: contact.name,
-      position: contact.position,
-      phone: contact.phone,
     })
     setOpen(false)
-    form.reset()
-    onCreated?.(contact)
+    router.invalidate()
   }
 
   return (
@@ -107,22 +95,17 @@ export function AddContactDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) form.reset()
+        if (next) form.reset(valuesFrom(contact))
       }}
     >
       <DialogTrigger asChild>
-        {trigger ?? (
-          <Button className="bg-blue-600 hover:bg-blue-600/90">
-            <Plus className="size-4" />
-            Add Contact
-          </Button>
-        )}
+        <Button variant="outline">Edit Profile</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Contact</DialogTitle>
+          <DialogTitle>Edit Contact</DialogTitle>
           <DialogDescription>
-            Create a new contact linked to a company.
+            Update this contact&apos;s profile details.
           </DialogDescription>
         </DialogHeader>
 
@@ -145,32 +128,30 @@ export function AddContactDialog({
               )}
             />
 
-            {!lockedCompanyId && (
-              <FormField
-                control={form.control}
-                name="companyId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Company</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select company" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {COMPANIES.map((company) => (
-                          <SelectItem key={company.id} value={company.id}>
-                            {company.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="companyId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COMPANIES.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -249,23 +230,6 @@ export function AddContactDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Any context worth remembering about this contact..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <DialogFooter>
               <Button
                 type="button"
@@ -275,7 +239,7 @@ export function AddContactDialog({
                 Cancel
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Create Contact
+                Save Changes
               </Button>
             </DialogFooter>
           </form>

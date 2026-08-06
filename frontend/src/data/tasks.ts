@@ -10,77 +10,21 @@ export interface Task {
   priority: TaskPriority
   createdAt: string
   dueDate: string
+  notes?: string
   companyId?: string
+  isFollowUp?: boolean
 }
 
-export const TASKS: Task[] = [
-  {
-    id: 'task-1',
-    title: 'Follow Up',
-    tag: 'Lead',
-    status: 'Todo',
-    priority: 'Medium',
-    createdAt: '2026-07-29',
-    dueDate: '2026-08-13',
-  },
-  {
-    id: 'task-2',
-    title: 'Call PT ABC',
-    tag: 'Lead',
-    status: 'Todo',
-    priority: 'Medium',
-    createdAt: '2026-07-29',
-    dueDate: '2026-08-10',
-  },
-  {
-    id: 'task-3',
-    title: 'Send Quotation',
-    tag: 'Lead',
-    status: 'Todo',
-    priority: 'Low',
-    createdAt: '2026-07-29',
-    dueDate: '2026-08-15',
-  },
-  {
-    id: 'task-4',
-    title: 'Follow Up PT ABC',
-    tag: 'Lead',
-    status: 'Todo',
-    priority: 'High',
-    createdAt: '2026-07-29',
-    dueDate: '2026-08-12',
-  },
-  {
-    id: 'task-5',
-    title: 'Demo PT XYZ',
-    tag: 'Prospect',
-    status: 'In Progress',
-    priority: 'Medium',
-    createdAt: '2026-07-20',
-    dueDate: '2026-08-05',
-  },
-  {
-    id: 'task-6',
-    title: 'Proposal PT ABC',
-    tag: 'Closed Won',
-    status: 'Completed',
-    priority: 'High',
-    createdAt: '2026-07-01',
-    dueDate: '2026-07-20',
-  },
-  {
-    id: 'task-7',
-    title: 'Meeting PT DEF',
-    tag: 'Closed Won',
-    status: 'Completed',
-    priority: 'Medium',
-    createdAt: '2026-07-05',
-    dueDate: '2026-07-25',
-  },
-]
+export const TASKS: Task[] = []
 
 export function getTaskById(id: string) {
   return TASKS.find((task) => task.id === id)
+}
+
+export function deleteTask(id: string) {
+  const index = TASKS.findIndex((task) => task.id === id)
+  if (index === -1) return
+  TASKS.splice(index, 1)
 }
 
 export interface NewTaskInput {
@@ -122,6 +66,24 @@ export function updateTaskStatus(id: string, status: TaskStatus): Task {
   return task
 }
 
+export interface EditTaskInput {
+  dueDate: string
+  priority: TaskPriority
+  notes: string
+}
+
+export function updateTask(id: string, input: EditTaskInput): Task {
+  const task = getTaskById(id)
+  if (!task) {
+    throw new Error(`Task not found: ${id}`)
+  }
+
+  task.dueDate = input.dueDate
+  task.priority = input.priority
+  task.notes = input.notes
+  return task
+}
+
 export function addFollowUpTask(company: {
   id: string
   name: string
@@ -129,17 +91,18 @@ export function addFollowUpTask(company: {
 }): Task {
   const created = new Date()
   const due = new Date(created)
-  due.setDate(due.getDate() + 3)
+  due.setDate(due.getDate() + 14)
 
   const task: Task = {
     id: `task-${TASKS.length + 1}`,
     title: `Follow Up ${company.name}`,
     tag: company.status,
     status: 'Todo',
-    priority: 'Medium',
+    priority: 'Low',
     createdAt: created.toISOString().slice(0, 10),
     dueDate: due.toISOString().slice(0, 10),
     companyId: company.id,
+    isFollowUp: true,
   }
 
   TASKS.push(task)
@@ -148,17 +111,36 @@ export function addFollowUpTask(company: {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+function daysSince(dateIso: string, today: Date) {
+  const start = new Date(`${dateIso}T00:00:00`)
+  return Math.floor((today.getTime() - start.getTime()) / DAY_MS)
+}
+
 export function getTaskUrgency(task: Task, today: Date = new Date()): TaskUrgency {
   if (task.status === 'Completed') return 'normal'
 
-  const created = new Date(`${task.createdAt}T00:00:00`)
-  const daysSinceCreated = Math.floor(
-    (today.getTime() - created.getTime()) / DAY_MS,
-  )
+  const daysSinceCreated = daysSince(task.createdAt, today)
 
   if (daysSinceCreated >= 14) return 'urgent'
   if (daysSinceCreated >= 7) return 'warning'
   return 'normal'
+}
+
+/**
+ * Automated follow-up tasks escalate priority the longer they sit open:
+ * Medium after 7 days, High after 14 days.
+ */
+export function getEffectivePriority(
+  task: Task,
+  today: Date = new Date(),
+): TaskPriority {
+  if (!task.isFollowUp) return task.priority
+
+  const daysSinceCreated = daysSince(task.createdAt, today)
+
+  if (daysSinceCreated >= 14) return 'High'
+  if (daysSinceCreated >= 7) return 'Medium'
+  return task.priority
 }
 
 export function formatDeadline(dueDate: string, today: Date = new Date()) {

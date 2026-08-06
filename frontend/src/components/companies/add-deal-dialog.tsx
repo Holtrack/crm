@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -29,49 +30,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { updateDeal, type Deal } from '@/data/companies'
-
-const STATUSES = ['Proposal', 'Negotiation', 'Won', 'Lost'] as const
+import { addDeal, COMPANIES } from '@/data/companies'
+import { STAGES } from '@/data/pipeline'
 
 const formSchema = z.object({
+  companyId: z.string().min(1, 'Select a company'),
   name: z.string().trim().min(2, 'Deal name is required'),
-  amount: z.string().trim().min(1, 'Contract value is required'),
-  status: z.enum(STATUSES),
+  amount: z.string().trim().min(1, 'Amount is required'),
+  status: z.enum(['Proposal', 'Negotiation', 'Won', 'Lost']),
   probability: z
-    .number({ error: 'Probability is required' })
-    .min(0)
-    .max(100),
+    .string()
+    .trim()
+    .min(1, 'Probability is required')
+    .refine((value) => {
+      const num = Number(value)
+      return !Number.isNaN(num) && num >= 0 && num <= 100
+    }, 'Enter a number between 0 and 100'),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-interface EditDealDialogProps {
-  deal: Deal
+interface AddDealDialogProps {
+  companyId?: string
+  onCreated?: () => void
+  trigger?: ReactNode
 }
 
-export function EditDealDialog({ deal }: EditDealDialogProps) {
+export function AddDealDialog({
+  companyId: lockedCompanyId,
+  onCreated,
+  trigger,
+}: AddDealDialogProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: deal.name,
-      amount: deal.amount,
-      status: deal.status,
-      probability: deal.probability,
+      companyId: lockedCompanyId ?? '',
+      name: '',
+      amount: '',
+      status: 'Proposal',
+      probability: '50',
     },
   })
 
   function onSubmit(values: FormValues) {
-    updateDeal(deal.id, {
-      name: values.name,
-      amount: values.amount,
-      status: values.status,
-      probability: values.probability,
+    addDeal(lockedCompanyId ?? values.companyId, {
+      ...values,
+      probability: Number(values.probability),
     })
     setOpen(false)
-    router.invalidate()
+    form.reset()
+    if (onCreated) {
+      onCreated()
+    } else {
+      router.invalidate()
+    }
   }
 
   return (
@@ -79,24 +94,22 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (next) {
-          form.reset({
-            name: deal.name,
-            amount: deal.amount,
-            status: deal.status,
-            probability: deal.probability,
-          })
-        }
+        if (!next) form.reset()
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline">Edit Deal</Button>
+        {trigger ?? (
+          <Button size="sm" variant="outline">
+            <Plus className="size-4" />
+            Add
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Deal</DialogTitle>
+          <DialogTitle>Add Deal</DialogTitle>
           <DialogDescription>
-            Update this deal&apos;s specifications.
+            Create a new deal and place it on the pipeline.
           </DialogDescription>
         </DialogHeader>
 
@@ -105,6 +118,33 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-4"
           >
+            {!lockedCompanyId && (
+              <FormField
+                control={form.control}
+                name="companyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select company" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COMPANIES.map((company) => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="name"
@@ -112,7 +152,7 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
                 <FormItem>
                   <FormLabel>Deal Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="ERP Implementation" {...field} />
+                    <Input placeholder="Annual Contract Renewal" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -125,9 +165,9 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contract Value</FormLabel>
+                    <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input placeholder="Rp500.000.000" {...field} />
+                      <Input placeholder="Rp 50.000.000" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,15 +180,7 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
                   <FormItem>
                     <FormLabel>Probability (%)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        {...field}
-                        onChange={(event) =>
-                          field.onChange(Number(event.target.value))
-                        }
-                      />
+                      <Input type="number" min={0} max={100} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -161,7 +193,7 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Stage</FormLabel>
+                  <FormLabel>Pipeline Stage</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -169,9 +201,9 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {STATUSES.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
+                      {STAGES.map((stage) => (
+                        <SelectItem key={stage.key} value={stage.key}>
+                          {stage.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -190,7 +222,7 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
                 Cancel
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Save Changes
+                Create Deal
               </Button>
             </DialogFooter>
           </form>

@@ -30,8 +30,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { updateCompany, type Company } from '@/data/companies'
+import { TEAM_OWNERS } from '@/data/owners'
 
-export const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
 export const SOURCES = [
   'Website Contact Form',
   'Cold Outreach',

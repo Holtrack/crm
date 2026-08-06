@@ -4,7 +4,10 @@ import { Check, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { DatePicker } from '@/components/ui/date-picker'
+import { TimeSelect } from '@/components/ui/time-select'
 import { updateDealStages } from '@/data/companies'
+import { formatDateTime } from '@/data/activities'
 import { cn } from '@/lib/utils'
 import type { DealStage } from '@/data/contacts'
 
@@ -154,22 +157,36 @@ function StageEditRow({
   onCancel,
   onDelete,
 }: StageEditRowProps) {
+  const [date, setDate] = useState('')
+  const [time, setTime] = useState('')
+
+  function applyDate(next: string) {
+    setDate(next)
+    setDraft((prev) => ({ ...prev, date: formatDateTime(next, time || '00:00') }))
+  }
+
+  function applyTime(next: string) {
+    setTime(next)
+    if (date) {
+      setDraft((prev) => ({ ...prev, date: formatDateTime(date, next) }))
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3 rounded-lg border p-3">
+      <Input
+        placeholder="Stage title"
+        value={draft.title}
+        onChange={(event) =>
+          setDraft((prev) => ({ ...prev, title: event.target.value }))
+        }
+      />
       <div className="grid grid-cols-2 gap-3">
-        <Input
-          placeholder="Stage title"
-          value={draft.title}
-          onChange={(event) =>
-            setDraft((prev) => ({ ...prev, title: event.target.value }))
-          }
-        />
-        <Input
-          placeholder="Date"
-          value={draft.date}
-          onChange={(event) =>
-            setDraft((prev) => ({ ...prev, date: event.target.value }))
-          }
+        <DatePicker value={date} onChange={applyDate} placeholder="Pick a date" />
+        <TimeSelect
+          value={time}
+          onValueChange={applyTime}
+          placeholder="Select time"
         />
       </div>
       <Input

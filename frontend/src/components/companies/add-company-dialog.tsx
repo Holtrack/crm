@@ -32,8 +32,8 @@ import {
 } from '@/components/ui/select'
 import { addCompany } from '@/data/companies'
 import { addFollowUpTask } from '@/data/tasks'
+import { TEAM_OWNERS } from '@/data/owners'
 
-const TEAM_OWNERS = ['Charissa', 'Andi Wijaya', 'Rina Kartika', 'Dimas Prasetyo']
 const SOURCES = [
   'Website Contact Form',
   'Cold Outreach',
