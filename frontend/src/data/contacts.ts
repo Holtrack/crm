@@ -1,5 +1,3 @@
-import type { ContactStatus } from '@/components/dashboard/status-badge'
-
 export interface DealStage {
   title: string
   description: string
@@ -17,7 +15,6 @@ export interface ContactDetail {
   phone: string
   position: string
   owner: string
-  status: ContactStatus
   notes: string
   dealStages: DealStage[]
 }
@@ -26,6 +23,12 @@ export const CONTACTS: ContactDetail[] = []
 
 export function getContactById(id: string) {
   return CONTACTS.find((contact) => contact.id === id)
+}
+
+export function deleteContact(id: string) {
+  const index = CONTACTS.findIndex((contact) => contact.id === id)
+  if (index === -1) return
+  CONTACTS.splice(index, 1)
 }
 
 export function slugifyContactName(name: string) {
@@ -44,7 +47,6 @@ export interface NewContactInput {
   phone: string
   position: string
   owner: string
-  status: ContactStatus
   notes: string
 }
 
@@ -56,7 +58,6 @@ export interface UpdateContactInput {
   phone: string
   position: string
   owner: string
-  status: ContactStatus
 }
 
 export function updateContact(
@@ -76,7 +77,6 @@ export function updateContact(
   contact.phone = input.phone
   contact.position = input.position
   contact.owner = input.owner
-  contact.status = input.status
 
   return contact
 }
@@ -97,7 +97,6 @@ export function addContact(input: NewContactInput): ContactDetail {
     phone: input.phone,
     position: input.position,
     owner: input.owner,
-    status: input.status,
     notes: input.notes,
     dealStages: [],
   }

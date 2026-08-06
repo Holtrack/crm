@@ -3,15 +3,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -26,10 +20,15 @@ export const Route = createFileRoute('/contacts')({
 
 function ContactsPage() {
   const [contacts, setContacts] = useState<ContactDetail[]>(CONTACTS)
+  const [search, setSearch] = useState('')
 
   function refresh() {
     setContacts([...CONTACTS])
   }
+
+  const filteredContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(search.trim().toLowerCase()),
+  )
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,19 +47,13 @@ function ContactsPage() {
       <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Filter by contact name..." className="pl-9" />
+          <Input
+            placeholder="Filter by contact name..."
+            className="pl-9"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
         </div>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Status: All</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="prospect">Prospect</SelectItem>
-            <SelectItem value="customer">Customer</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="rounded-xl border bg-card">
@@ -73,16 +66,26 @@ function ContactsPage() {
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Owner</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contacts.map((contact) => (
+            {filteredContacts.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="py-6 text-center text-sm text-muted-foreground"
+                >
+                  No contacts match your filters.
+                </TableCell>
+              </TableRow>
+            )}
+            {filteredContacts.map((contact) => (
               <ContactRow
                 key={contact.id}
                 contact={contact}
                 onUpdated={refresh}
+                onDeleted={refresh}
               />
             ))}
           </TableBody>

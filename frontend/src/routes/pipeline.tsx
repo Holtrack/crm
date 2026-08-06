@@ -13,6 +13,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DealCard } from '@/components/pipeline/deal-card'
 import { PipelineColumn } from '@/components/pipeline/pipeline-column'
+import { AddDealDialog } from '@/components/companies/add-deal-dialog'
 import { STAGES, getPipelineDeals, type StageKey } from '@/data/pipeline'
 import { updateDealStatus } from '@/data/companies'
 
@@ -56,10 +57,15 @@ function PipelinePage() {
             Drag and drop cards to update deal status instantly.
           </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-600/90">
-          <Plus className="size-4" />
-          New Deal
-        </Button>
+        <AddDealDialog
+          onCreated={() => setDeals(getPipelineDeals())}
+          trigger={
+            <Button className="bg-blue-600 hover:bg-blue-600/90">
+              <Plus className="size-4" />
+              New Deal
+            </Button>
+          }
+        />
       </div>
 
       <DndContext

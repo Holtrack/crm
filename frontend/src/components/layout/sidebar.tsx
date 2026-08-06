@@ -5,7 +5,6 @@ import {
   Users,
   GitBranch,
   CheckSquare,
-  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -15,7 +14,6 @@ const NAV_ITEMS = [
   { label: 'Contacts', to: '/contacts', icon: Users },
   { label: 'Pipeline', to: '/pipeline', icon: GitBranch },
   { label: 'Tasks', to: '/tasks', icon: CheckSquare },
-  { label: 'Settings', to: '/settings', icon: Settings },
 ] as const
 
 export function Sidebar() {

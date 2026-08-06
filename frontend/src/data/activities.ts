@@ -10,7 +10,6 @@ export interface Activity {
   id: string
   companyId: string
   title: string
-  context: string
   type: ActivityType
   datetime: string
   summary: string
@@ -29,14 +28,13 @@ export function getActivitiesByCompanyId(companyId: string) {
 export interface NewActivityInput {
   companyId: string
   title: string
-  context: string
   type: ActivityType
   date: string
   time: string
   summary: string
 }
 
-function formatDateTime(date: string, time: string) {
+export function formatDateTime(date: string, time: string) {
   const parsed = new Date(`${date}T${time}`)
   if (Number.isNaN(parsed.getTime())) return `${date} ${time}`
   const datePart = parsed.toLocaleDateString('en-GB', {
@@ -59,7 +57,6 @@ export function addActivity(input: NewActivityInput): Activity {
     id,
     companyId: input.companyId,
     title: input.title,
-    context: input.context,
     type: input.type,
     datetime: formatDateTime(input.date, input.time),
     summary: input.summary,
@@ -71,7 +68,6 @@ export function addActivity(input: NewActivityInput): Activity {
 
 export interface EditActivityInput {
   title: string
-  context: string
   type: ActivityType
   datetime: string
   summary: string
@@ -84,7 +80,6 @@ export function updateActivity(id: string, input: EditActivityInput): Activity {
   }
 
   activity.title = input.title
-  activity.context = input.context
   activity.type = input.type
   activity.datetime = input.datetime
   activity.summary = input.summary

@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { TEAM_OWNERS, SOURCES } from '@/components/companies/edit-company-dialog'
+import { SOURCES } from '@/components/companies/edit-company-dialog'
+import { TEAM_OWNERS } from '@/data/owners'
 import { updateCompanyCredentials, type Company } from '@/data/companies'
 
 interface CompanyCredentialsProps {

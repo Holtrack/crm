@@ -59,6 +59,12 @@ export function getCompanyById(id: string) {
   return COMPANIES.find((company) => company.id === id)
 }
 
+export function deleteCompany(id: string) {
+  const index = COMPANIES.findIndex((company) => company.id === id)
+  if (index === -1) return
+  COMPANIES.splice(index, 1)
+}
+
 export function slugifyCompanyName(name: string) {
   return name
     .trim()
@@ -114,16 +120,6 @@ export function getDealById(dealId: string) {
   return undefined
 }
 
-export function updateDealInformation(dealId: string, information: string): Deal {
-  const deal = getDealById(dealId)
-  if (!deal) {
-    throw new Error(`Deal not found: ${dealId}`)
-  }
-
-  deal.information = information
-  return deal
-}
-
 export function updateDealStatus(dealId: string, status: DealStatus): Deal {
   const deal = getDealById(dealId)
   if (!deal) {
@@ -140,6 +136,36 @@ export interface EditDealInput {
   status: DealStatus
   probability: number
   contactId?: string
+}
+
+export interface NewDealInput {
+  name: string
+  amount: string
+  status: DealStatus
+  probability: number
+  contactId?: string
+}
+
+export function addDeal(companyId: string, input: NewDealInput): Deal {
+  const company = getCompanyById(companyId)
+  if (!company) {
+    throw new Error(`Company not found: ${companyId}`)
+  }
+
+  const deal: Deal = {
+    id: `deal-${companyId}-${company.deals.length + 1}`,
+    companyId,
+    name: input.name,
+    amount: input.amount,
+    status: input.status,
+    probability: input.probability,
+    contactId: input.contactId,
+    activityLog: [],
+    information: '',
+  }
+
+  company.deals.push(deal)
+  return deal
 }
 
 export function updateDeal(dealId: string, input: EditDealInput): Deal {
@@ -164,6 +190,16 @@ export interface EditCompanyCredentialsInput {
   address: string
   teamLeadOwner: string
   source: CompanySource
+}
+
+export function updateCompanyStatus(id: string, status: CompanyStatus): Company {
+  const company = getCompanyById(id)
+  if (!company) {
+    throw new Error(`Company not found: ${id}`)
+  }
+
+  company.status = status
+  return company
 }
 
 export function updateCompanyCredentials(
@@ -218,6 +254,14 @@ export function addCompanyContact(
 
   company.contacts.push(contact)
   return company
+}
+
+export function removeCompanyContact(companyId: string, contactId: string) {
+  const company = getCompanyById(companyId)
+  if (!company) return
+  company.contacts = company.contacts.filter(
+    (contact) => contact.contactId !== contactId,
+  )
 }
 
 export function updateCompany(id: string, input: EditCompanyInput): Company {

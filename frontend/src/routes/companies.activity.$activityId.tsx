@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ACTIVITY_TYPES } from '@/components/companies/add-activity-dialog'
+import { BackButton } from '@/components/dashboard/back-button'
 import { getActivityById, updateActivity } from '@/data/activities'
 
 export const Route = createFileRoute('/companies/activity/$activityId')({
@@ -31,7 +32,6 @@ function ActivityDetailPage() {
   const [editing, setEditing] = useState(false)
   const [values, setValues] = useState(() => ({
     title: activity.title,
-    context: activity.context,
     type: activity.type,
     datetime: activity.datetime,
     summary: activity.summary,
@@ -40,7 +40,6 @@ function ActivityDetailPage() {
   function startEditing() {
     setValues({
       title: activity.title,
-      context: activity.context,
       type: activity.type,
       datetime: activity.datetime,
       summary: activity.summary,
@@ -60,6 +59,8 @@ function ActivityDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <BackButton />
+
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
@@ -67,33 +68,17 @@ function ActivityDetailPage() {
           </span>
           <div className="min-w-0">
             {editing ? (
-              <div className="flex flex-col gap-2">
-                <Input
-                  value={values.title}
-                  onChange={(event) =>
-                    setValues((prev) => ({ ...prev, title: event.target.value }))
-                  }
-                  className="text-lg font-semibold"
-                />
-                <Input
-                  value={values.context}
-                  onChange={(event) =>
-                    setValues((prev) => ({
-                      ...prev,
-                      context: event.target.value,
-                    }))
-                  }
-                />
-              </div>
+              <Input
+                value={values.title}
+                onChange={(event) =>
+                  setValues((prev) => ({ ...prev, title: event.target.value }))
+                }
+                className="text-lg font-semibold"
+              />
             ) : (
-              <>
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  {activity.title}
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {activity.context}
-                </p>
-              </>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {activity.title}
+              </h1>
             )}
           </div>
         </div>

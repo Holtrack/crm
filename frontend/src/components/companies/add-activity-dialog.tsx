@@ -39,7 +39,6 @@ export const ACTIVITY_TYPES = ['WhatsApp', 'Call', 'Email', 'Demo', 'Follow Up',
 
 const formSchema = z.object({
   title: z.string().trim().min(3, 'Title is required'),
-  context: z.string().trim().min(3, 'Context is required'),
   type: z.enum(ACTIVITY_TYPES),
   date: z.string().min(1, 'Date is required'),
   time: z.string().min(1, 'Time is required'),
@@ -60,7 +59,6 @@ export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
-      context: '',
       type: 'WhatsApp',
       date: '',
       time: '',
@@ -114,23 +112,6 @@ export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
                   <FormControl>
                     <Input
                       placeholder="Follow-up and Proposal Review Meeting"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="context"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Context</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="B2B Client Consultation • Indonesian Market"
                       {...field}
                     />
                   </FormControl>
