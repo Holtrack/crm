@@ -29,7 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { updateDeal, type Deal } from '@/data/companies'
+import { updateDeal, type Deal } from '@/data/deals'
+import { ApiError } from '@/lib/api'
 
 const STATUSES = ['Proposal', 'Negotiation', 'Won', 'Lost'] as const
 
@@ -51,6 +52,8 @@ interface EditDealDialogProps {
 
 export function EditDealDialog({ deal }: EditDealDialogProps) {
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
   const form = useForm<FormValues>({
@@ -63,15 +66,25 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
     },
   })
 
-  function onSubmit(values: FormValues) {
-    updateDeal(deal.id, {
-      name: values.name,
-      amount: values.amount,
-      status: values.status,
-      probability: values.probability,
-    })
-    setOpen(false)
-    router.invalidate()
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      await updateDeal(deal.id, {
+        name: values.name,
+        amount: values.amount,
+        status: values.status,
+        probability: values.probability,
+      })
+      setOpen(false)
+      router.invalidate()
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal menyimpan perubahan.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -79,6 +92,7 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
+        setError('')
         if (next) {
           form.reset({
             name: deal.name,
@@ -181,6 +195,8 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -189,8 +205,12 @@ export function EditDealDialog({ deal }: EditDealDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Save Changes
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </form>

@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
-import { Pencil } from 'lucide-react'
+import {
+  Pencil,
+  IdCard,
+  Globe,
+  Phone,
+  MapPin,
+  UserRound,
+  Tag,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -45,8 +53,8 @@ export function CompanyCredentials({ company }: CompanyCredentialsProps) {
     setEditing(false)
   }
 
-  function save() {
-    updateCompanyCredentials(company.id, values)
+  async function save() {
+    await updateCompanyCredentials(company.id, values)
     setEditing(false)
     router.invalidate()
   }
@@ -54,7 +62,12 @@ export function CompanyCredentials({ company }: CompanyCredentialsProps) {
   return (
     <>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Company Credentials</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+            <IdCard className="size-4" />
+          </span>
+          Company Credentials
+        </CardTitle>
         {!editing && (
           <Button
             type="button"
@@ -181,46 +194,35 @@ export function CompanyCredentials({ company }: CompanyCredentialsProps) {
             </div>
           </>
         ) : (
-          <>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Industry
-              </p>
-              <p className="mt-1 text-sm font-medium">{company.industry}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Website
-              </p>
-              <p className="mt-1 text-sm font-medium">{company.website}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Phone Number
-              </p>
-              <p className="mt-1 text-sm font-medium">{company.phone}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Address
-              </p>
-              <p className="mt-1 text-sm font-medium">{company.address}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Team Lead Owner
-              </p>
-              <p className="mt-1 text-sm font-medium">
-                {company.teamLeadOwner}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Lead Source
-              </p>
-              <p className="mt-1 text-sm font-medium">{company.source}</p>
-            </div>
-          </>
+          <div className="flex flex-col divide-y divide-border/60">
+            {[
+              { icon: IdCard, label: 'Industry', value: company.industry },
+              { icon: Globe, label: 'Website', value: company.website },
+              { icon: Phone, label: 'Phone Number', value: company.phone },
+              { icon: MapPin, label: 'Address', value: company.address },
+              {
+                icon: UserRound,
+                label: 'Team Lead Owner',
+                value: company.teamLeadOwner,
+              },
+              { icon: Tag, label: 'Lead Source', value: company.source },
+            ].map(({ icon: Icon, label, value }) => (
+              <div
+                key={label}
+                className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <Icon className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="truncate text-sm font-medium">
+                    {value || '—'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </>

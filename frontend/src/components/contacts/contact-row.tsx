@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Check, Pencil, Trash2, X } from 'lucide-react'
+import { Check, Mail, Pencil, Phone, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { TableCell, TableRow } from '@/components/ui/table'
 import {
   Select,
@@ -20,7 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { AvatarInitial } from '@/components/dashboard/avatar-initial'
-import { COMPANIES, removeCompanyContact } from '@/data/companies'
+import { useCompanies } from '@/data/companies'
 import { deleteContact, updateContact, type ContactDetail } from '@/data/contacts'
 import { TEAM_OWNERS } from '@/data/owners'
 
@@ -56,6 +57,7 @@ export function ContactRow({
   const [editing, setEditing] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [draft, setDraft] = useState<EditState>(() => toEditState(contact))
+  const companies = useCompanies()
 
   function startEditing() {
     setDraft(toEditState(contact))
@@ -66,26 +68,24 @@ export function ContactRow({
     setEditing(false)
   }
 
-  function save() {
-    const company = COMPANIES.find((c) => c.id === draft.companyId)
-    if (!company || !draft.name.trim()) return
+  async function save() {
+    if (!draft.name.trim()) return
 
-    const updated = updateContact(contact.id, {
+    const updated = await updateContact(contact.id, {
       name: draft.name.trim(),
-      company: company.name,
-      companyId: company.id,
+      companyId: draft.companyId,
       email: draft.email.trim(),
       phone: draft.phone.trim(),
       position: draft.position.trim(),
       owner: draft.owner,
     })
+
     onUpdated(updated)
     setEditing(false)
   }
 
-  function confirmDelete() {
-    deleteContact(contact.id)
-    removeCompanyContact(contact.companyId, contact.id)
+  async function confirmDelete() {
+    await deleteContact(contact.id)
     setConfirmingDelete(false)
     onDeleted?.(contact.id)
   }
@@ -117,12 +117,12 @@ export function ContactRow({
 
   if (!editing) {
     return (
-      <TableRow className="group">
+      <TableRow className="group transition-colors hover:bg-muted/40">
         <TableCell className="p-0">
           <Link
             to="/companies/$contactId"
             params={{ contactId: contact.id }}
-            className="flex items-center gap-3 px-2 py-2"
+            className="flex items-center gap-3 px-4 py-3"
           >
             <AvatarInitial name={contact.name} />
             <span className="font-medium">{contact.name}</span>
@@ -132,7 +132,7 @@ export function ContactRow({
           <Link
             to="/companies/org/$companyId"
             params={{ companyId: contact.companyId }}
-            className="hover:underline"
+            className="hover:text-foreground hover:underline"
           >
             {contact.company}
           </Link>
@@ -141,16 +141,35 @@ export function ContactRow({
           {contact.position}
         </TableCell>
         <TableCell className="text-muted-foreground">
-          {contact.email}
+          {contact.email ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Mail className="size-3.5 shrink-0" />
+              {contact.email}
+            </span>
+          ) : (
+            '—'
+          )}
         </TableCell>
         <TableCell className="text-muted-foreground">
-          {contact.phone}
-        </TableCell>
-        <TableCell className="text-muted-foreground">
-          {contact.owner}
+          {contact.phone ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Phone className="size-3.5 shrink-0" />
+              {contact.phone}
+            </span>
+          ) : (
+            '—'
+          )}
         </TableCell>
         <TableCell>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+          <Badge
+            variant="outline"
+            className="border-transparent bg-slate-100 font-medium text-slate-700"
+          >
+            {contact.owner}
+          </Badge>
+        </TableCell>
+        <TableCell>
+          <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
             <Button
               variant="ghost"
               size="icon"
@@ -192,7 +211,7 @@ export function ContactRow({
             <SelectValue placeholder="Company" />
           </SelectTrigger>
           <SelectContent>
-            {COMPANIES.map((company) => (
+            {companies.map((company) => (
               <SelectItem key={company.id} value={company.id}>
                 {company.name}
               </SelectItem>

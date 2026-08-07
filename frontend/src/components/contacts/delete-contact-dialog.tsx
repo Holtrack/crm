@@ -12,7 +12,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { deleteContact, type ContactDetail } from '@/data/contacts'
-import { removeCompanyContact } from '@/data/companies'
 
 interface DeleteContactDialogProps {
   contact: ContactDetail
@@ -22,9 +21,8 @@ export function DeleteContactDialog({ contact }: DeleteContactDialogProps) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
 
-  function onConfirm() {
-    deleteContact(contact.id)
-    removeCompanyContact(contact.companyId, contact.id)
+  async function onConfirm() {
+    await deleteContact(contact.id)
     setOpen(false)
     navigate({ to: '/contacts' })
   }

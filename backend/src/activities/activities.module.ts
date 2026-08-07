@@ -1,0 +1,14 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Activity } from './activity.entity';
+import { Company } from '../companies/company.entity';
+import { ActivitiesService } from './activities.service';
+import { ActivitiesController } from './activities.controller';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Activity, Company])],
+  controllers: [ActivitiesController],
+  providers: [ActivitiesService],
+  exports: [ActivitiesService],
+})
+export class ActivitiesModule {}

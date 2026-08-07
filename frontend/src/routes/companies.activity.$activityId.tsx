@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
+import { DatePicker } from '@/components/ui/date-picker'
+import { TimeSelect } from '@/components/ui/time-select'
 import {
   Select,
   SelectContent,
@@ -14,13 +16,18 @@ import {
 } from '@/components/ui/select'
 import { ACTIVITY_TYPES } from '@/components/companies/add-activity-dialog'
 import { BackButton } from '@/components/dashboard/back-button'
-import { getActivityById, updateActivity } from '@/data/activities'
+import { getActivity, splitOccurredAt, updateActivity } from '@/data/activities'
+import { ApiError } from '@/lib/api'
 
 export const Route = createFileRoute('/companies/activity/$activityId')({
-  loader: ({ params }) => {
-    const activity = getActivityById(params.activityId)
-    if (!activity) throw notFound()
-    return { activity }
+  loader: async ({ params }) => {
+    try {
+      const activity = await getActivity(params.activityId)
+      return { activity }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) throw notFound()
+      throw err
+    }
   },
   component: ActivityDetailPage,
 })
@@ -30,31 +37,53 @@ function ActivityDetailPage() {
   const router = useRouter()
 
   const [editing, setEditing] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [values, setValues] = useState(() => ({
     title: activity.title,
     type: activity.type,
-    datetime: activity.datetime,
     summary: activity.summary,
+    ...splitOccurredAt(activity.occurredAt),
   }))
 
   function startEditing() {
     setValues({
       title: activity.title,
       type: activity.type,
-      datetime: activity.datetime,
       summary: activity.summary,
+      ...splitOccurredAt(activity.occurredAt),
     })
+    setError('')
     setEditing(true)
   }
 
   function cancel() {
     setEditing(false)
+    setError('')
   }
 
-  function save() {
-    updateActivity(activity.id, values)
-    setEditing(false)
-    router.invalidate()
+  async function save() {
+    setError('')
+    setSubmitting(true)
+    try {
+      const occurredAt = new Date(
+        `${values.date}T${values.time}:00.000Z`,
+      ).toISOString()
+      await updateActivity(activity.id, {
+        title: values.title,
+        type: values.type,
+        summary: values.summary,
+        occurredAt,
+      })
+      setEditing(false)
+      router.invalidate()
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal menyimpan perubahan.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -130,16 +159,22 @@ function ActivityDetailPage() {
               Date &amp; Time
             </span>
             {editing ? (
-              <Input
-                className="w-56"
-                value={values.datetime}
-                onChange={(event) =>
-                  setValues((prev) => ({
-                    ...prev,
-                    datetime: event.target.value,
-                  }))
-                }
-              />
+              <div className="flex gap-2">
+                <DatePicker
+                  value={values.date}
+                  onChange={(date) =>
+                    setValues((prev) => ({ ...prev, date }))
+                  }
+                  placeholder="Pick a date"
+                />
+                <TimeSelect
+                  value={values.time}
+                  onValueChange={(time) =>
+                    setValues((prev) => ({ ...prev, time }))
+                  }
+                  placeholder="Select time"
+                />
+              </div>
             ) : (
               <span className="text-sm font-medium">{activity.datetime}</span>
             )}
@@ -165,17 +200,21 @@ function ActivityDetailPage() {
           </div>
 
           {editing && (
-            <div className="flex justify-end gap-2 pt-3">
-              <Button type="button" variant="outline" onClick={cancel}>
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                className="bg-blue-600 hover:bg-blue-600/90"
-                onClick={save}
-              >
-                Save Changes
-              </Button>
+            <div className="flex flex-col gap-2 pt-3">
+              {error && <p className="text-sm text-rose-600">{error}</p>}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={cancel}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  disabled={submitting}
+                  className="bg-blue-600 hover:bg-blue-600/90"
+                  onClick={save}
+                >
+                  {submitting ? 'Menyimpan...' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

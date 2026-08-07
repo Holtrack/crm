@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
 import {
   DndContext,
   DragOverlay,
@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Trash2 } from 'lucide-react'
+import { CheckSquare2, ListTodo, Sparkles, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AddTaskDialog } from '@/components/tasks/add-task-dialog'
 import { TaskCard } from '@/components/tasks/task-card'
@@ -35,18 +35,16 @@ import { TaskColumn } from '@/components/tasks/task-column'
 import { EditTaskDialog } from '@/components/tasks/edit-task-dialog'
 import { TaskPriorityBadge, TaskStatusBadge } from '@/components/tasks/task-badges'
 import {
-  TASKS,
   deleteTask,
   formatDeadline,
-  getEffectivePriority,
   getTaskUrgency,
+  listTasks,
   updateTaskStatus,
   type Task,
   type TaskStatus,
 } from '@/data/tasks'
 
 export const Route = createFileRoute('/tasks')({
-  loader: () => ({ tasks: TASKS }),
   component: TasksPage,
 })
 
@@ -63,8 +61,7 @@ const URGENCY_TEXT_STYLES = {
 } as const
 
 function TasksPage() {
-  const { tasks } = Route.useLoaderData()
-  const router = useRouter()
+  const [tasks, setTasks] = useState<Task[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [deletingTask, setDeletingTask] = useState<Task | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -74,47 +71,95 @@ function TasksPage() {
     }),
   )
 
-  function toggle(id: string, checked: boolean) {
-    updateTaskStatus(id, checked ? 'Completed' : 'Todo')
-    router.invalidate()
+  function refresh() {
+    listTasks().then(setTasks)
+  }
+
+  useEffect(() => {
+    refresh()
+  }, [])
+
+  async function toggle(id: string, checked: boolean) {
+    await updateTaskStatus(id, checked ? 'Completed' : 'Todo')
+    refresh()
   }
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(String(event.active.id))
   }
 
-  function handleDragEnd(event: DragEndEvent) {
+  async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     setActiveId(null)
     if (!over) return
 
-    updateTaskStatus(String(active.id), over.id as TaskStatus)
-    router.invalidate()
+    await updateTaskStatus(String(active.id), over.id as TaskStatus)
+    refresh()
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deletingTask) return
-    deleteTask(deletingTask.id)
+    await deleteTask(deletingTask.id)
     setDeletingTask(null)
-    router.invalidate()
+    refresh()
   }
 
   const activeTask = tasks.find((task) => task.id === activeId)
   const sortedTasks = [...tasks].sort((a, b) =>
     a.dueDate.localeCompare(b.dueDate),
   )
+  const urgentCount = tasks.filter(
+    (task) => getTaskUrgency(task) === 'urgent',
+  ).length
+  const completedCount = tasks.filter(
+    (task) => task.status === 'Completed',
+  ).length
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Track and manage your daily sales activities and follow-ups. Drag
-            cards between columns to update status.
-          </p>
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-rose-950 via-slate-900 to-slate-900 px-6 py-7 shadow-lg sm:px-8">
+        <div className="pointer-events-none absolute -top-16 -right-10 size-64 rounded-full bg-rose-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-1/4 size-56 rounded-full bg-pink-500/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="flex items-center gap-1.5 text-sm font-medium text-rose-300/80">
+              <Sparkles className="size-3.5" />
+              {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} tracked
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              Tasks
+            </h1>
+            <p className="mt-2 text-sm text-white/50">
+              Track and manage your daily sales activities and follow-ups.
+              Drag cards between columns to update status.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-6">
+              <div className="flex items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-rose-500/20 text-rose-300">
+                  <ListTodo className="size-4" />
+                </span>
+                <div>
+                  <p className="text-lg font-semibold text-white">
+                    {urgentCount}
+                  </p>
+                  <p className="text-xs text-white/40">Urgent tasks</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-300">
+                  <CheckSquare2 className="size-4" />
+                </span>
+                <div>
+                  <p className="text-lg font-semibold text-white">
+                    {completedCount}
+                  </p>
+                  <p className="text-xs text-white/40">Completed</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <AddTaskDialog onCreated={refresh} />
         </div>
-        <AddTaskDialog />
       </div>
 
       <DndContext
@@ -129,7 +174,8 @@ function TasksPage() {
               stageKey={column.key}
               label={column.label}
               tasks={tasks.filter((task) => task.status === column.key)}
-              onDeleted={() => router.invalidate()}
+              onChanged={refresh}
+              onDeleted={refresh}
               onEdit={setEditingTask}
             />
           ))}
@@ -140,10 +186,10 @@ function TasksPage() {
         </DragOverlay>
       </DndContext>
 
-      <div className="rounded-xl border bg-card">
+      <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               <TableHead>Task</TableHead>
               <TableHead>Deadline</TableHead>
               <TableHead>Priority</TableHead>
@@ -152,17 +198,31 @@ function TasksPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {sortedTasks.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-16">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <span className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      <ListTodo className="size-5" />
+                    </span>
+                    <p className="text-sm text-muted-foreground">
+                      No tasks yet.
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
             {sortedTasks.map((task) => {
               const urgency = getTaskUrgency(task)
               return (
                 <TableRow
                   key={task.id}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer transition-colors hover:bg-muted/40"
                   onClick={() => setEditingTask(task)}
                 >
                   <TableCell className="p-0">
                     <label
-                      className="flex items-center gap-3 px-2 py-2"
+                      className="flex items-center gap-3 px-4 py-3"
                       onClick={(event) => event.stopPropagation()}
                     >
                       <Checkbox
@@ -195,7 +255,7 @@ function TasksPage() {
                     {formatDeadline(task.dueDate)}
                   </TableCell>
                   <TableCell>
-                    <TaskPriorityBadge priority={getEffectivePriority(task)} />
+                    <TaskPriorityBadge priority={task.effectivePriority} />
                   </TableCell>
                   <TableCell>
                     <TaskStatusBadge status={task.status} />
@@ -249,7 +309,7 @@ function TasksPage() {
       <EditTaskDialog
         task={editingTask}
         onOpenChange={(open) => !open && setEditingTask(null)}
-        onSaved={() => router.invalidate()}
+        onSaved={refresh}
       />
     </div>
   )

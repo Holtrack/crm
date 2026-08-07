@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select'
 import { updateCompany, type Company } from '@/data/companies'
 import { TEAM_OWNERS } from '@/data/owners'
+import { ApiError } from '@/lib/api'
 
 export const SOURCES = [
   'Website Contact Form',
@@ -66,6 +67,8 @@ interface EditCompanyDialogProps {
 
 export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
   const form = useForm<FormValues>({
@@ -83,15 +86,25 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
     },
   })
 
-  function onSubmit(values: FormValues) {
-    updateCompany(company.id, {
-      ...values,
-      website: values.website ?? '',
-      phone: values.phone ?? '',
-      address: values.address ?? '',
-    })
-    setOpen(false)
-    router.invalidate()
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      await updateCompany(company.id, {
+        ...values,
+        website: values.website ?? '',
+        phone: values.phone ?? '',
+        address: values.address ?? '',
+      })
+      setOpen(false)
+      router.invalidate()
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal menyimpan perubahan.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -99,6 +112,7 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
+        setError('')
         if (next) {
           form.reset({
             name: company.name,
@@ -296,6 +310,8 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -304,8 +320,12 @@ export function EditCompanyDialog({ company }: EditCompanyDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Save Changes
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </form>

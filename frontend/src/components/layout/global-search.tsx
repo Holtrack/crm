@@ -3,8 +3,9 @@ import { useNavigate } from '@tanstack/react-router'
 import { Search, Building2, Briefcase } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { AvatarInitial } from '@/components/dashboard/avatar-initial'
-import { CONTACTS } from '@/data/contacts'
-import { COMPANIES } from '@/data/companies'
+import { useContacts } from '@/data/contacts'
+import { useCompanies } from '@/data/companies'
+import { useDeals } from '@/data/deals'
 
 const MAX_RESULTS_PER_GROUP = 5
 
@@ -13,6 +14,9 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const companies = useCompanies()
+  const allContacts = useContacts()
+  const allDeals = useDeals()
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -28,26 +32,28 @@ export function GlobalSearch() {
     const term = query.trim().toLowerCase()
     if (!term) return { contacts: [], companies: [], deals: [] }
 
-    const contacts = CONTACTS.filter(
+    const contacts = allContacts.filter(
       (contact) =>
         contact.name.toLowerCase().includes(term) ||
         contact.company.toLowerCase().includes(term),
     ).slice(0, MAX_RESULTS_PER_GROUP)
 
-    const companies = COMPANIES.filter(
+    const matchedCompanies = companies.filter(
       (company) =>
         company.name.toLowerCase().includes(term) ||
         company.industry.toLowerCase().includes(term),
     ).slice(0, MAX_RESULTS_PER_GROUP)
 
-    const deals = COMPANIES.flatMap((company) =>
-      company.deals
-        .filter((deal) => deal.name.toLowerCase().includes(term))
-        .map((deal) => ({ deal, company })),
-    ).slice(0, MAX_RESULTS_PER_GROUP)
+    const companyById = new Map(companies.map((company) => [company.id, company]))
+    const deals = allDeals.filter(
+      (deal) =>
+        deal.name.toLowerCase().includes(term) && companyById.has(deal.companyId),
+    )
+      .map((deal) => ({ deal, company: companyById.get(deal.companyId)! }))
+      .slice(0, MAX_RESULTS_PER_GROUP)
 
-    return { contacts, companies, deals }
-  }, [query])
+    return { contacts, companies: matchedCompanies, deals }
+  }, [query, companies, allContacts, allDeals])
 
   const hasResults =
     results.contacts.length > 0 ||

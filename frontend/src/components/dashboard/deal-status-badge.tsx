@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { DealStatus } from '@/data/companies'
+import type { DealStatus } from '@/data/deals'
 
 const DEAL_STATUS_STYLES: Record<DealStatus, string> = {
   Negotiation: 'bg-amber-100 text-amber-700',

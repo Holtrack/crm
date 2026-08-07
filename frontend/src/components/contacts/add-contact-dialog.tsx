@@ -31,8 +31,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { addContact, type ContactDetail } from '@/data/contacts'
-import { addCompanyContact, COMPANIES } from '@/data/companies'
+import { useCompanies } from '@/data/companies'
 import { TEAM_OWNERS } from '@/data/owners'
+import { ApiError } from '@/lib/api'
 
 const formSchema = z.object({
   name: z.string().trim().min(2, 'Contact name is required'),
@@ -63,6 +64,9 @@ export function AddContactDialog({
   trigger,
 }: AddContactDialogProps) {
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const companies = useCompanies()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -77,29 +81,29 @@ export function AddContactDialog({
     },
   })
 
-  function onSubmit(values: FormValues) {
-    const company = COMPANIES.find((c) => c.id === values.companyId)
-    if (!company) return
-
-    const contact = addContact({
-      name: values.name,
-      company: company.name,
-      companyId: company.id,
-      email: values.email ?? '',
-      phone: values.phone ?? '',
-      position: values.position ?? '',
-      owner: values.owner,
-      notes: values.notes ?? '',
-    })
-    addCompanyContact(company.id, {
-      contactId: contact.id,
-      name: contact.name,
-      position: contact.position,
-      phone: contact.phone,
-    })
-    setOpen(false)
-    form.reset()
-    onCreated?.(contact)
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      const contact = await addContact({
+        name: values.name,
+        companyId: values.companyId,
+        email: values.email ?? '',
+        phone: values.phone ?? '',
+        position: values.position ?? '',
+        owner: values.owner,
+        notes: values.notes ?? '',
+      })
+      setOpen(false)
+      form.reset()
+      onCreated?.(contact)
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal membuat contact.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -107,7 +111,10 @@ export function AddContactDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) form.reset()
+        if (!next) {
+          form.reset()
+          setError('')
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -159,7 +166,7 @@ export function AddContactDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {COMPANIES.map((company) => (
+                        {companies.map((company) => (
                           <SelectItem key={company.id} value={company.id}>
                             {company.name}
                           </SelectItem>
@@ -266,6 +273,8 @@ export function AddContactDialog({
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -274,8 +283,12 @@ export function AddContactDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Create Contact
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Create Contact'}
               </Button>
             </DialogFooter>
           </form>

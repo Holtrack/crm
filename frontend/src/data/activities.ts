@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react'
+import { apiFetch } from '@/lib/api'
+
 export type ActivityType =
   | 'WhatsApp'
   | 'Call'
@@ -11,18 +14,50 @@ export interface Activity {
   companyId: string
   title: string
   type: ActivityType
+  occurredAt: string
   datetime: string
   summary: string
+  createdAt: string
+  updatedAt: string
 }
 
-export const ACTIVITIES: Activity[] = []
-
-export function getActivityById(id: string) {
-  return ACTIVITIES.find((activity) => activity.id === id)
+export interface ActivityFilters {
+  companyId?: string
+  [key: string]: string | undefined
 }
 
-export function getActivitiesByCompanyId(companyId: string) {
-  return ACTIVITIES.filter((activity) => activity.companyId === companyId)
+export async function listActivities(
+  filters: ActivityFilters = {},
+): Promise<Activity[]> {
+  return apiFetch<Activity[]>('/activities', { query: filters })
+}
+
+export function useActivities(filters: ActivityFilters = {}): Activity[] {
+  const [activities, setActivities] = useState<Activity[]>([])
+  const filterKey = JSON.stringify(filters)
+
+  useEffect(() => {
+    let cancelled = false
+    listActivities(JSON.parse(filterKey)).then((data) => {
+      if (!cancelled) setActivities(data)
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey])
+
+  return activities
+}
+
+export async function getActivity(id: string): Promise<Activity> {
+  return apiFetch<Activity>(`/activities/${id}`)
+}
+
+export async function getActivitiesByCompanyId(
+  companyId: string,
+): Promise<Activity[]> {
+  return listActivities({ companyId })
 }
 
 export interface NewActivityInput {
@@ -34,55 +69,35 @@ export interface NewActivityInput {
   summary: string
 }
 
-export function formatDateTime(date: string, time: string) {
-  const parsed = new Date(`${date}T${time}`)
-  if (Number.isNaN(parsed.getTime())) return `${date} ${time}`
-  const datePart = parsed.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-  const timePart = parsed.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-  return `${datePart}, ${timePart}`
-}
-
-export function addActivity(input: NewActivityInput): Activity {
-  const id = `act-${input.companyId}-${ACTIVITIES.length + 1}`
-
-  const activity: Activity = {
-    id,
-    companyId: input.companyId,
-    title: input.title,
-    type: input.type,
-    datetime: formatDateTime(input.date, input.time),
-    summary: input.summary,
-  }
-
-  ACTIVITIES.push(activity)
-  return activity
+export async function addActivity(input: NewActivityInput): Promise<Activity> {
+  return apiFetch<Activity>('/activities', { method: 'POST', body: input })
 }
 
 export interface EditActivityInput {
   title: string
   type: ActivityType
-  datetime: string
+  occurredAt: string
   summary: string
 }
 
-export function updateActivity(id: string, input: EditActivityInput): Activity {
-  const activity = getActivityById(id)
-  if (!activity) {
-    throw new Error(`Activity not found: ${id}`)
+export async function updateActivity(
+  id: string,
+  input: EditActivityInput,
+): Promise<Activity> {
+  return apiFetch<Activity>(`/activities/${id}`, {
+    method: 'PATCH',
+    body: input,
+  })
+}
+
+export async function deleteActivity(id: string): Promise<void> {
+  await apiFetch(`/activities/${id}`, { method: 'DELETE' })
+}
+
+export function splitOccurredAt(occurredAt: string) {
+  const parsed = new Date(occurredAt)
+  return {
+    date: parsed.toISOString().slice(0, 10),
+    time: parsed.toISOString().slice(11, 16),
   }
-
-  activity.title = input.title
-  activity.type = input.type
-  activity.datetime = input.datetime
-  activity.summary = input.summary
-
-  return activity
 }

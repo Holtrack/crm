@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useRouter } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -32,7 +31,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { addTask } from '@/data/tasks'
-import { COMPANIES } from '@/data/companies'
+import { useCompanies } from '@/data/companies'
+import { ApiError } from '@/lib/api'
 
 const STATUSES = ['Todo', 'In Progress', 'Completed'] as const
 const PRIORITIES = ['Low', 'Medium', 'High'] as const
@@ -48,9 +48,15 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-export function AddTaskDialog() {
+interface AddTaskDialogProps {
+  onCreated?: () => void
+}
+
+export function AddTaskDialog({ onCreated }: AddTaskDialogProps = {}) {
   const [open, setOpen] = useState(false)
-  const router = useRouter()
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const companies = useCompanies()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -64,11 +70,19 @@ export function AddTaskDialog() {
     },
   })
 
-  function onSubmit(values: FormValues) {
-    addTask(values)
-    setOpen(false)
-    form.reset()
-    router.invalidate()
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      await addTask(values)
+      setOpen(false)
+      form.reset()
+      onCreated?.()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Gagal membuat task.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -76,7 +90,10 @@ export function AddTaskDialog() {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) form.reset()
+        if (!next) {
+          form.reset()
+          setError('')
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -209,7 +226,7 @@ export function AddTaskDialog() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {COMPANIES.map((company) => (
+                      {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
                         </SelectItem>
@@ -221,6 +238,8 @@ export function AddTaskDialog() {
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -229,8 +248,12 @@ export function AddTaskDialog() {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Create Task
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Create Task'}
               </Button>
             </DialogFooter>
           </form>
