@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { addActivity } from '@/data/activities'
+import { ApiError } from '@/lib/api'
 
 export const ACTIVITY_TYPES = ['WhatsApp', 'Call', 'Email', 'Demo', 'Follow Up', 'Meeting'] as const
 
@@ -53,6 +54,8 @@ interface AddActivityDialogProps {
 
 export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
 
   const form = useForm<FormValues>({
@@ -66,14 +69,24 @@ export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
     },
   })
 
-  function onSubmit(values: FormValues) {
-    const activity = addActivity({ ...values, companyId })
-    setOpen(false)
-    form.reset()
-    navigate({
-      to: '/companies/activity/$activityId',
-      params: { activityId: activity.id },
-    })
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      const activity = await addActivity({ ...values, companyId })
+      setOpen(false)
+      form.reset()
+      navigate({
+        to: '/companies/activity/$activityId',
+        params: { activityId: activity.id },
+      })
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal membuat activity.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -81,7 +94,10 @@ export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) form.reset()
+        if (!next) {
+          form.reset()
+          setError('')
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -199,6 +215,8 @@ export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -207,8 +225,12 @@ export function AddActivityDialog({ companyId }: AddActivityDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Log Activity
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Log Activity'}
               </Button>
             </DialogFooter>
           </form>

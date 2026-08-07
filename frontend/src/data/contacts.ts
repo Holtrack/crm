@@ -1,9 +1,5 @@
-export interface DealStage {
-  title: string
-  description: string
-  date: string
-  done: boolean
-}
+import { useEffect, useState } from 'react'
+import { apiFetch } from '@/lib/api'
 
 export interface ContactDetail {
   id: string
@@ -16,32 +12,78 @@ export interface ContactDetail {
   position: string
   owner: string
   notes: string
-  dealStages: DealStage[]
 }
 
-export const CONTACTS: ContactDetail[] = []
-
-export function getContactById(id: string) {
-  return CONTACTS.find((contact) => contact.id === id)
+interface ContactApiResponse {
+  id: string
+  name: string
+  companyId: string
+  companyName: string
+  title: string
+  email: string
+  phone: string
+  position: string
+  owner: string
+  notes: string
 }
 
-export function deleteContact(id: string) {
-  const index = CONTACTS.findIndex((contact) => contact.id === id)
-  if (index === -1) return
-  CONTACTS.splice(index, 1)
+function toContactDetail(raw: ContactApiResponse): ContactDetail {
+  return {
+    id: raw.id,
+    name: raw.name,
+    title: raw.title,
+    company: raw.companyName,
+    companyId: raw.companyId,
+    email: raw.email,
+    phone: raw.phone,
+    position: raw.position,
+    owner: raw.owner,
+    notes: raw.notes,
+  }
 }
 
-export function slugifyContactName(name: string) {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
+export interface ContactFilters {
+  search?: string
+  companyId?: string
+  [key: string]: string | undefined
+}
+
+export async function listContacts(
+  filters: ContactFilters = {},
+): Promise<ContactDetail[]> {
+  const raw = await apiFetch<ContactApiResponse[]>('/contacts', { query: filters })
+  return raw.map(toContactDetail)
+}
+
+export function useContacts(): ContactDetail[] {
+  const [contacts, setContacts] = useState<ContactDetail[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    listContacts()
+      .then((result) => {
+        if (!cancelled) setContacts(result)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return contacts
+}
+
+export async function getContact(id: string): Promise<ContactDetail> {
+  const raw = await apiFetch<ContactApiResponse>(`/contacts/${id}`)
+  return toContactDetail(raw)
+}
+
+export function getContactsByCompanyId(companyId: string): Promise<ContactDetail[]> {
+  return listContacts({ companyId })
 }
 
 export interface NewContactInput {
   name: string
-  company: string
   companyId: string
   email: string
   phone: string
@@ -50,9 +92,16 @@ export interface NewContactInput {
   notes: string
 }
 
+export async function addContact(input: NewContactInput): Promise<ContactDetail> {
+  const raw = await apiFetch<ContactApiResponse>('/contacts', {
+    method: 'POST',
+    body: input,
+  })
+  return toContactDetail(raw)
+}
+
 export interface UpdateContactInput {
   name: string
-  company: string
   companyId: string
   email: string
   phone: string
@@ -60,47 +109,17 @@ export interface UpdateContactInput {
   owner: string
 }
 
-export function updateContact(
+export async function updateContact(
   id: string,
   input: UpdateContactInput,
-): ContactDetail {
-  const contact = getContactById(id)
-  if (!contact) {
-    throw new Error(`Contact not found: ${id}`)
-  }
-
-  contact.name = input.name
-  contact.title = `${input.position} at ${input.company}`
-  contact.company = input.company
-  contact.companyId = input.companyId
-  contact.email = input.email
-  contact.phone = input.phone
-  contact.position = input.position
-  contact.owner = input.owner
-
-  return contact
+): Promise<ContactDetail> {
+  const raw = await apiFetch<ContactApiResponse>(`/contacts/${id}`, {
+    method: 'PATCH',
+    body: input,
+  })
+  return toContactDetail(raw)
 }
 
-export function addContact(input: NewContactInput): ContactDetail {
-  const slug = slugifyContactName(input.name)
-  const id = CONTACTS.some((contact) => contact.id === slug)
-    ? `${slug}-${CONTACTS.length + 1}`
-    : slug
-
-  const contact: ContactDetail = {
-    id,
-    name: input.name,
-    title: `${input.position} at ${input.company}`,
-    company: input.company,
-    companyId: input.companyId,
-    email: input.email,
-    phone: input.phone,
-    position: input.position,
-    owner: input.owner,
-    notes: input.notes,
-    dealStages: [],
-  }
-
-  CONTACTS.push(contact)
-  return contact
+export function deleteContact(id: string): Promise<void> {
+  return apiFetch<void>(`/contacts/${id}`, { method: 'DELETE' })
 }

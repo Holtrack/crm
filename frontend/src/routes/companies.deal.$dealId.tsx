@@ -4,16 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DealStatusBadge } from '@/components/dashboard/deal-status-badge'
 import { EditDealDialog } from '@/components/companies/edit-deal-dialog'
 import { BackButton } from '@/components/dashboard/back-button'
-import { getDealById, getCompanyById } from '@/data/companies'
+import { getCompany } from '@/data/companies'
+import { getDeal } from '@/data/deals'
 import { cn } from '@/lib/utils'
+import { ApiError } from '@/lib/api'
 
 export const Route = createFileRoute('/companies/deal/$dealId')({
-  loader: ({ params }) => {
-    const deal = getDealById(params.dealId)
-    if (!deal) throw notFound()
-    const company = getCompanyById(deal.companyId)
-    if (!company) throw notFound()
-    return { deal, company }
+  loader: async ({ params }) => {
+    try {
+      const deal = await getDeal(params.dealId)
+      const company = await getCompany(deal.companyId)
+      return { deal, company }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) throw notFound()
+      throw err
+    }
   },
   component: DealDetailPage,
 })

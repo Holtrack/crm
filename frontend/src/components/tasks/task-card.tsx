@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useRouter } from '@tanstack/react-router'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { Trash2 } from 'lucide-react'
@@ -14,7 +13,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { deleteTask, getTaskUrgency, updateTaskStatus, type Task } from '@/data/tasks'
+import {
+  deleteTask,
+  formatDeadline,
+  getTaskUrgency,
+  updateTaskStatus,
+  type Task,
+} from '@/data/tasks'
+import { TaskPriorityBadge } from '@/components/tasks/task-badges'
 
 const URGENCY_STYLES = {
   normal: 'border-l-transparent',
@@ -30,29 +36,29 @@ const URGENCY_LABEL = {
 
 export function TaskCard({
   task,
+  onChanged,
   onDeleted,
   onEdit,
 }: {
   task: Task
+  onChanged?: () => void
   onDeleted?: () => void
   onEdit?: (task: Task) => void
 }) {
-  const router = useRouter()
   const urgency = getTaskUrgency(task)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: task.id })
 
-  function toggle(checked: boolean) {
-    updateTaskStatus(task.id, checked ? 'Completed' : 'Todo')
-    router.invalidate()
+  async function toggle(checked: boolean) {
+    await updateTaskStatus(task.id, checked ? 'Completed' : 'Todo')
+    onChanged?.()
   }
 
-  function confirmDelete() {
-    deleteTask(task.id)
+  async function confirmDelete() {
+    await deleteTask(task.id)
     setConfirmingDelete(false)
     onDeleted?.()
-    router.invalidate()
   }
 
   return (
@@ -60,7 +66,7 @@ export function TaskCard({
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform) }}
       className={cn(
-        'group flex touch-none items-start gap-3 rounded-xl border border-l-4 bg-card p-4',
+        'group flex touch-none items-start gap-3 rounded-xl border border-l-4 bg-card p-4 shadow-sm transition-shadow hover:shadow-md',
         URGENCY_STYLES[urgency],
         isDragging && 'opacity-40',
       )}
@@ -88,6 +94,12 @@ export function TaskCard({
           {task.title}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">{task.tag}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <TaskPriorityBadge priority={task.effectivePriority} />
+          <span className="rounded-md border bg-white px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+            {formatDeadline(task.dueDate)}
+          </span>
+        </div>
       </div>
       <Button
         variant="ghost"

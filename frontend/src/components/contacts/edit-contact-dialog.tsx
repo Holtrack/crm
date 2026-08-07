@@ -30,8 +30,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { updateContact, type ContactDetail } from '@/data/contacts'
-import { COMPANIES } from '@/data/companies'
+import { useCompanies } from '@/data/companies'
 import { TEAM_OWNERS } from '@/data/owners'
+import { ApiError } from '@/lib/api'
 
 const formSchema = z.object({
   name: z.string().trim().min(2, 'Contact name is required'),
@@ -66,28 +67,37 @@ function valuesFrom(contact: ContactDetail): FormValues {
 
 export function EditContactDialog({ contact }: EditContactDialogProps) {
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
+  const companies = useCompanies()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: valuesFrom(contact),
   })
 
-  function onSubmit(values: FormValues) {
-    const company = COMPANIES.find((c) => c.id === values.companyId)
-    if (!company) return
-
-    updateContact(contact.id, {
-      name: values.name,
-      company: company.name,
-      companyId: company.id,
-      email: values.email ?? '',
-      phone: values.phone ?? '',
-      position: values.position ?? '',
-      owner: values.owner,
-    })
-    setOpen(false)
-    router.invalidate()
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      await updateContact(contact.id, {
+        name: values.name,
+        companyId: values.companyId,
+        email: values.email ?? '',
+        phone: values.phone ?? '',
+        position: values.position ?? '',
+        owner: values.owner,
+      })
+      setOpen(false)
+      router.invalidate()
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal menyimpan perubahan.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -95,6 +105,7 @@ export function EditContactDialog({ contact }: EditContactDialogProps) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
+        setError('')
         if (next) form.reset(valuesFrom(contact))
       }}
     >
@@ -141,7 +152,7 @@ export function EditContactDialog({ contact }: EditContactDialogProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {COMPANIES.map((company) => (
+                      {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
                         </SelectItem>
@@ -230,6 +241,8 @@ export function EditContactDialog({ contact }: EditContactDialogProps) {
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -238,8 +251,12 @@ export function EditContactDialog({ contact }: EditContactDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Save Changes
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </form>

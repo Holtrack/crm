@@ -30,8 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { addDeal, COMPANIES } from '@/data/companies'
+import { addDeal } from '@/data/deals'
+import { useCompanies } from '@/data/companies'
 import { STAGES } from '@/data/pipeline'
+import { ApiError } from '@/lib/api'
 
 const formSchema = z.object({
   companyId: z.string().min(1, 'Select a company'),
@@ -62,7 +64,10 @@ export function AddDealDialog({
   trigger,
 }: AddDealDialogProps) {
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
+  const companies = useCompanies()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,17 +80,27 @@ export function AddDealDialog({
     },
   })
 
-  function onSubmit(values: FormValues) {
-    addDeal(lockedCompanyId ?? values.companyId, {
-      ...values,
-      probability: Number(values.probability),
-    })
-    setOpen(false)
-    form.reset()
-    if (onCreated) {
-      onCreated()
-    } else {
-      router.invalidate()
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      await addDeal(lockedCompanyId ?? values.companyId, {
+        name: values.name,
+        amount: values.amount,
+        status: values.status,
+        probability: Number(values.probability),
+      })
+      setOpen(false)
+      form.reset()
+      if (onCreated) {
+        onCreated()
+      } else {
+        router.invalidate()
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Gagal membuat deal.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -94,7 +109,10 @@ export function AddDealDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) form.reset()
+        if (!next) {
+          form.reset()
+          setError('')
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -132,7 +150,7 @@ export function AddDealDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {COMPANIES.map((company) => (
+                        {companies.map((company) => (
                           <SelectItem key={company.id} value={company.id}>
                             {company.name}
                           </SelectItem>
@@ -213,6 +231,8 @@ export function AddDealDialog({
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -221,8 +241,12 @@ export function AddDealDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Create Deal
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Create Deal'}
               </Button>
             </DialogFooter>
           </form>

@@ -39,8 +39,8 @@ export function CompanyStatusSelect({
   status,
   onChanged,
 }: CompanyStatusSelectProps) {
-  function handleChange(next: string) {
-    const updated = updateCompanyStatus(companyId, next as CompanyStatus)
+  async function handleChange(next: string) {
+    const updated = await updateCompanyStatus(companyId, next as CompanyStatus)
     onChanged?.(updated.status)
   }
 

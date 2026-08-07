@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,11 +20,13 @@ interface DeleteCompanyDialogProps {
 export function DeleteCompanyDialog({ company }: DeleteCompanyDialogProps) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
+  const router = useRouter()
 
-  function onConfirm() {
-    deleteCompany(company.id)
+  async function onConfirm() {
+    await deleteCompany(company.id)
     setOpen(false)
-    navigate({ to: '/companies' })
+    await navigate({ to: '/companies' })
+    router.invalidate()
   }
 
   return (

@@ -31,8 +31,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { addCompany } from '@/data/companies'
-import { addFollowUpTask } from '@/data/tasks'
+import { createFollowUpTask } from '@/data/tasks'
 import { TEAM_OWNERS } from '@/data/owners'
+import { ApiError } from '@/lib/api'
 
 const SOURCES = [
   'Website Contact Form',
@@ -60,6 +61,8 @@ type FormValues = z.infer<typeof formSchema>
 
 export function AddCompanyDialog() {
   const [open, setOpen] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
 
   const form = useForm<FormValues>({
@@ -77,20 +80,30 @@ export function AddCompanyDialog() {
     },
   })
 
-  function onSubmit(values: FormValues) {
-    const company = addCompany({
-      ...values,
-      website: values.website ?? '',
-      phone: values.phone ?? '',
-      address: values.address ?? '',
-    })
-    addFollowUpTask(company)
-    setOpen(false)
-    form.reset()
-    navigate({
-      to: '/companies/org/$companyId',
-      params: { companyId: company.id },
-    })
+  async function onSubmit(values: FormValues) {
+    setError('')
+    setSubmitting(true)
+    try {
+      const company = await addCompany({
+        ...values,
+        website: values.website ?? '',
+        phone: values.phone ?? '',
+        address: values.address ?? '',
+      })
+      await createFollowUpTask(company)
+      setOpen(false)
+      form.reset()
+      navigate({
+        to: '/companies/org/$companyId',
+        params: { companyId: company.id },
+      })
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal membuat company.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -98,7 +111,10 @@ export function AddCompanyDialog() {
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) form.reset()
+        if (!next) {
+          form.reset()
+          setError('')
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -286,6 +302,8 @@ export function AddCompanyDialog() {
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -294,8 +312,12 @@ export function AddCompanyDialog() {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Create Company
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Create Company'}
               </Button>
             </DialogFooter>
           </form>

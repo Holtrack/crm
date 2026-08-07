@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -28,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { updateTask, type Task } from '@/data/tasks'
+import { ApiError } from '@/lib/api'
 
 const PRIORITIES = ['Low', 'Medium', 'High'] as const
 
@@ -50,6 +52,8 @@ export function EditTaskDialog({
   onOpenChange,
   onSaved,
 }: EditTaskDialogProps) {
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     values: task
@@ -61,11 +65,21 @@ export function EditTaskDialog({
       : undefined,
   })
 
-  function onSubmit(values: FormValues) {
+  async function onSubmit(values: FormValues) {
     if (!task) return
-    updateTask(task.id, { ...values, notes: values.notes ?? '' })
-    onOpenChange(false)
-    onSaved?.()
+    setError('')
+    setSubmitting(true)
+    try {
+      await updateTask(task.id, { ...values, notes: values.notes ?? '' })
+      onOpenChange(false)
+      onSaved?.()
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : 'Gagal menyimpan perubahan.',
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -145,6 +159,8 @@ export function EditTaskDialog({
               )}
             />
 
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -153,8 +169,12 @@ export function EditTaskDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-600/90">
-                Save Changes
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 hover:bg-blue-600/90"
+              >
+                {submitting ? 'Menyimpan...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </form>
