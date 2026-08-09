@@ -21,7 +21,7 @@ export class Contact {
   companyId: string;
 
   @ManyToOne(() => Company, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'companyId' })
+  @JoinColumn({ name: 'company_id' })
   company: Company;
 
   @Column({ default: '' })

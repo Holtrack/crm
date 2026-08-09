@@ -1,15 +1,21 @@
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: crm-local-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: crm
+      POSTGRES_DB: crm_local
     ports:
       - '5432:5432'
     volumes:
       - crm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d crm_local']
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   crm_pgdata:

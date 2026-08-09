@@ -17,7 +17,7 @@ interface LoginResponse {
 
 const STORAGE_KEY = 'crm-holtrack-auth'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL || `${window.location.origin}/api`
 
 export class LoginError extends Error {}
 

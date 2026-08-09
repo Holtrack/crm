@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -26,8 +27,8 @@ import { ActivitiesModule } from './activities/activities.module';
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_NAME', 'crm'),
         autoLoadEntities: true,
-        synchronize:
-          config.get<string>('NODE_ENV', 'development') !== 'production',
+        namingStrategy: new SnakeNamingStrategy(),
+        synchronize: false,
       }),
     }),
     UsersModule,

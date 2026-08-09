@@ -1,6 +1,6 @@
 import { getAuthToken } from '@/lib/auth'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const API_BASE = import.meta.env.VITE_API_URL || `${window.location.origin}/api`
 
 export class ApiError extends Error {
   status: number
@@ -29,7 +29,7 @@ export async function apiFetch<T>(
   path: string,
   options: ApiFetchOptions = {},
 ): Promise<T> {
-  const url = new URL(path, API_URL)
+  const url = new URL(path.replace(/^\//, ''), API_BASE + '/')
   if (options.query) {
     for (const [key, value] of Object.entries(options.query)) {
       if (value) url.searchParams.set(key, value)
