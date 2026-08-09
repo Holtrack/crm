@@ -4,15 +4,15 @@ services:
     container_name: crm-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-      POSTGRES_DB: ${DB_NAME:-crm}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - crm_pgdata:/var/lib/postgresql/data
     networks:
       - caddy
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-crm}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_NAME}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -49,7 +49,8 @@ services:
     container_name: crm-frontend
     restart: unless-stopped
     environment:
-      VITE_PROXY_TARGET: ${VITE_PROXY_TARGET:-http://crm-backend:3000}
+      VITE_PROXY_TARGET: ${VITE_PROXY_TARGET}
+      VITE_ALLOWED_HOSTS: ${VITE_ALLOWED_HOSTS}
     depends_on:
       - crm-backend
     networks:
